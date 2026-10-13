@@ -1,0 +1,10 @@
+node_modules/
+__pycache__/
+
+# Third-party code kept locally for reference only
+references/myfavett/
+references/yt-dlp/
+references/v1/libs/
+
+# Raw API captures contain account data; commit only sanitized fixtures
+test/fixtures/raw/
