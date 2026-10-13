@@ -43,6 +43,40 @@ This is a rewrite; the original version lives in `references/v1/`.
   extension. The folder format is the contract between them.
 - **Browser:** Chromium only.
 
+## Staying on TikTok's good side
+
+On 2026-10-13, the first day of development, TikTok showed the test account
+two captchas. The first came before any video had been downloaded. The cause
+was not established. What happened that day, most likely first:
+
+1. A freshly installed browser with a new login.
+2. Ad-hoc exploration: about ten likes-feed requests in a few minutes through
+   the logged-in session, with varying parameters, plus partial-file requests.
+3. Feed requests that carry seven parameters where TikTok's own page sends
+   several dozen.
+4. Volume: a 27-page scan in two minutes, then several more runs.
+5. A dozen refused requests to TikTok's video servers from the same IP address
+   (`curl` and a logged-out headless browser).
+
+Rules that follow from it:
+
+- **Never probe TikTok outside the extension.** No `curl`, no headless browser,
+  no hand-written requests through a logged-in session. Download code is
+  tested against a local server; TikTok is only contacted by real runs.
+- **Pages of the likes feed are 5 to 9 seconds apart**, and downloads 1 to 2.5
+  seconds apart.
+- **A verification or refusal ends the run** with instructions for the user.
+  The extension never retries past one.
+
+Still to do:
+
+- Compare our feed request with the one TikTok's own page sends when the Likes
+  tab is opened, and match its parameters.
+- Decide whether a routine run should stop walking the feed once it reaches
+  items that are already saved. That would cut requests sharply, but such a
+  run would no longer confirm which older items are still online.
+- Find out whether the Origin/Referer rule for video downloads is needed.
+
 ## Archive folder format
 
 ```text

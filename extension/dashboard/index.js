@@ -240,7 +240,7 @@ async function run() {
           delayFor: retryDelay,
           wait: (ms) => wait(ms, signal)
         }),
-      pause: () => wait(3000 + Math.random() * 2000, signal)
+      pause: () => wait(5000 + Math.random() * 4000, signal)
     });
 
     let refusalsInARow = 0;
