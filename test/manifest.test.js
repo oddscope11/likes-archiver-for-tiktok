@@ -13,7 +13,7 @@ test("manifest references files that exist", () => {
   }
 });
 
-test("manifest requests no permissions beyond TikTok host access", () => {
-  assert.deepEqual(manifest.permissions ?? [], []);
+test("manifest requests only what the extension uses", () => {
+  assert.deepEqual(manifest.permissions, ["scripting"]);
   assert.deepEqual(manifest.host_permissions, ["https://www.tiktok.com/*"]);
 });

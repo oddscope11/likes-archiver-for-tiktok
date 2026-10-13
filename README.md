@@ -30,6 +30,11 @@ This is a rewrite; the original version lives in `references/v1/`.
 - **Scope:** liked items only, videos and photo posts.
 - **Quality:** highest resolution, then HEVC over H.264, then highest bitrate.
   `bytevc2` (VVC) streams are skipped.
+- **No muxing for now:** the feed is requested without `video_encoding=dash`, so
+  every stream already includes audio and files are saved exactly as served.
+  Dash offers long videos (over about 60 s) at a higher bitrate, but as
+  video-only streams that need a local remux. Every offered stream is kept in
+  the raw record, so this can be revisited.
 - **Photo posts:** saved as the original images in order plus the audio track,
   not rendered into a video.
 - **Metadata:** keep everything TikTok returns, including each time an item was
@@ -37,6 +42,23 @@ This is a rewrite; the original version lives in `references/v1/`.
 - **Gallery:** a separate consumer of the archive folder, not part of the
   extension. The folder format is the contract between them.
 - **Browser:** Chromium only.
+
+## Archive folder format
+
+```text
+<archive>/
+  archive.json      { format, createdAt, account, lastCompleteScanAt }
+  items/<id>.json   One record per liked item
+```
+
+Each item record holds:
+
+- `id`, `kind` (`video`, `photo` or `unknown`)
+- `firstSeenAt`, and `seenAt`: every scan that found the item in the feed
+- `feedWindow`: the page cursors around the item when first seen. Cursors look
+  like millisecond timestamps of the like, so they bracket when it was liked.
+- `media`: what has been saved for the item (`null` until downloaded)
+- `raw`: the item exactly as TikTok returned it on the latest scan
 
 ## Layout
 

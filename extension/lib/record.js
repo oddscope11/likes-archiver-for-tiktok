@@ -1,0 +1,31 @@
+// The per-item record stored in the archive folder as items/<id>.json.
+
+export const RECORD_FORMAT = 1;
+
+// The id becomes a file name, so it must be exactly what TikTok ids look like.
+export function isValidId(id) {
+  return typeof id === "string" && /^\d{1,32}$/.test(id);
+}
+
+export function classify(item) {
+  if (item.imagePost) return "photo";
+  if (item.video?.playAddr || item.video?.bitrateInfo?.length) return "video";
+  return "unknown";
+}
+
+// Builds the record for an item just seen in the feed, carrying over what an
+// earlier run already knew about it.
+export function buildRecord(item, existing, { now, newerCursor, olderCursor }) {
+  return {
+    format: RECORD_FORMAT,
+    id: item.id,
+    kind: classify(item),
+    firstSeenAt: existing?.firstSeenAt ?? now,
+    seenAt: [...(existing?.seenAt ?? []), now],
+    // The feed page the item was first found on. Cursors look like millisecond
+    // timestamps of the like, so this brackets when the item was liked.
+    feedWindow: existing?.feedWindow ?? { newerCursor, olderCursor },
+    media: existing?.media ?? null,
+    raw: item
+  };
+}

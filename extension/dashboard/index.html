@@ -2,11 +2,41 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TikTok Likes Archiver</title>
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <h1>TikTok Likes Archiver</h1>
-  <p id="version"></p>
+  <main>
+    <header>
+      <h1>TikTok Likes Archiver</h1>
+      <span id="version"></span>
+    </header>
+
+    <section>
+      <h2>1. TikTok account</h2>
+      <p id="account-status">Checking…</p>
+      <button id="open-tiktok" hidden>Open TikTok</button>
+      <button id="check-account" hidden>Check again</button>
+    </section>
+
+    <section>
+      <h2>2. Archive folder</h2>
+      <p id="folder-status">No folder chosen yet.</p>
+      <button id="pick-folder">Choose folder</button>
+      <button id="regain-folder" hidden>Allow access to the folder</button>
+    </section>
+
+    <section>
+      <h2>3. Scan your likes</h2>
+      <p>Reads the list of everything you have liked and saves its details to the folder. Nothing is downloaded yet.</p>
+      <button id="start" disabled>Start scan</button>
+      <button id="stop" hidden>Stop</button>
+      <p id="scan-status" role="status"></p>
+      <p id="scan-counts"></p>
+    </section>
+  </main>
+
   <script type="module" src="index.js"></script>
 </body>
 </html>

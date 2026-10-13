@@ -1,0 +1,925 @@
+{
+  "video_hevc_1080p": {
+    "id": "7000000000000000001",
+    "desc": "A caption with #hashtag",
+    "createTime": 1675513430,
+    "author": {
+      "id": "6000000000000000001",
+      "uniqueId": "creator1",
+      "nickname": "Creator 1"
+    },
+    "video": {
+      "PlayAddrStruct": {
+        "DataSize": 10588858,
+        "FileCs": "x",
+        "FileHash": "x",
+        "Height": 1024,
+        "Uri": "x",
+        "UrlKey": "v0000000000000000_h264_540p_2109964",
+        "UrlList": [
+          "https://example.com/media/1",
+          "https://example.com/media/2",
+          "https://example.com/media/3"
+        ],
+        "Width": 576
+      },
+      "VQScore": "61.6",
+      "bitrate": 2109964,
+      "bitrateInfo": [
+        {
+          "Bitrate": 2914107,
+          "BitrateFPS": 30,
+          "CodecType": "h265_hvc1",
+          "Format": "mp4",
+          "GearName": "adapt_lowest_1080_1",
+          "MVMAF": "",
+          "PlayAddr": {
+            "DataSize": 14624446,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 1920,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_bytevc1_1080p_2914107",
+            "UrlList": [
+              "https://example.com/media/4",
+              "https://example.com/media/5",
+              "https://example.com/media/6"
+            ],
+            "Width": 1080
+          },
+          "QualityType": 2,
+          "VideoExtra": "{\"PktOffsetMap\":\"\",\"mvmaf\":\"\",\"ufq\":\"\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"83b8136705cc8dcca0a8ebb99232084c\",\"dec_info\":\"\",\"gearvqm\":\"\",\"audio_bit_rate\":64259}"
+        },
+        {
+          "Bitrate": 2109964,
+          "BitrateFPS": 30,
+          "CodecType": "h264",
+          "Format": "mp4",
+          "GearName": "normal_540_0",
+          "MVMAF": "",
+          "PlayAddr": {
+            "DataSize": 10588858,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 1024,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_h264_540p_2109964",
+            "UrlList": [
+              "https://example.com/media/7",
+              "https://example.com/media/8",
+              "https://example.com/media/9"
+            ],
+            "Width": 576
+          },
+          "QualityType": 20,
+          "VideoExtra": "{\"PktOffsetMap\":\"\",\"mvmaf\":\"\",\"ufq\":\"\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"5ec63939750549e79a31eb386fafda76\",\"dec_info\":\"\",\"gearvqm\":\"\",\"audio_bit_rate\":32157}"
+        },
+        {
+          "Bitrate": 1693289,
+          "BitrateFPS": 30,
+          "CodecType": "h265_hvc1",
+          "Format": "mp4",
+          "GearName": "adapt_lower_720_1",
+          "MVMAF": "",
+          "PlayAddr": {
+            "DataSize": 8497773,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 1280,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_bytevc1_720p_1693289",
+            "UrlList": [
+              "https://example.com/media/10",
+              "https://example.com/media/11",
+              "https://example.com/media/12"
+            ],
+            "Width": 720
+          },
+          "QualityType": 14,
+          "VideoExtra": "{\"PktOffsetMap\":\"\",\"mvmaf\":\"\",\"ufq\":\"\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"7a6e79316d1545e6c5d0510411dbcf4c\",\"dec_info\":\"\",\"gearvqm\":\"\",\"audio_bit_rate\":32157}"
+        },
+        {
+          "Bitrate": 1388553,
+          "BitrateFPS": 30,
+          "CodecType": "h265_hvc1",
+          "Format": "mp4",
+          "GearName": "adapt_540_1",
+          "MVMAF": "",
+          "PlayAddr": {
+            "DataSize": 6968457,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 1024,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_bytevc1_540p_1388553",
+            "UrlList": [
+              "https://example.com/media/13",
+              "https://example.com/media/14",
+              "https://example.com/media/15"
+            ],
+            "Width": 576
+          },
+          "QualityType": 28,
+          "VideoExtra": "{\"PktOffsetMap\":\"\",\"mvmaf\":\"\",\"ufq\":\"\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"7a6e79316d1545e6c5d0510411dbcf4c\",\"dec_info\":\"\",\"gearvqm\":\"\",\"audio_bit_rate\":32157}"
+        },
+        {
+          "Bitrate": 1125973,
+          "BitrateFPS": 30,
+          "CodecType": "h264",
+          "Format": "mp4",
+          "GearName": "lower_540_0",
+          "MVMAF": "",
+          "PlayAddr": {
+            "DataSize": 5650700,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 1024,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_h264_540p_1125973",
+            "UrlList": [
+              "https://example.com/media/16",
+              "https://example.com/media/17",
+              "https://example.com/media/18"
+            ],
+            "Width": 576
+          },
+          "QualityType": 24,
+          "VideoExtra": "{\"PktOffsetMap\":\"\",\"mvmaf\":\"\",\"ufq\":\"\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"5ec63939750549e79a31eb386fafda76\",\"dec_info\":\"\",\"gearvqm\":\"\",\"audio_bit_rate\":32157}"
+        },
+        {
+          "Bitrate": 751925,
+          "BitrateFPS": 30,
+          "CodecType": "h264",
+          "Format": "mp4",
+          "GearName": "lowest_540_0",
+          "MVMAF": "",
+          "PlayAddr": {
+            "DataSize": 3773540,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 1024,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_h264_540p_751925",
+            "UrlList": [
+              "https://example.com/media/19",
+              "https://example.com/media/20",
+              "https://example.com/media/21"
+            ],
+            "Width": 576
+          },
+          "QualityType": 25,
+          "VideoExtra": "{\"PktOffsetMap\":\"\",\"mvmaf\":\"\",\"ufq\":\"\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"5ec63939750549e79a31eb386fafda76\",\"dec_info\":\"\",\"gearvqm\":\"\",\"audio_bit_rate\":32157}"
+        }
+      ],
+      "claInfo": {
+        "enableAutoCaption": false,
+        "hasOriginalAudio": true,
+        "noCaptionReason": 2
+      },
+      "codecType": "h264",
+      "cover": "https://example.com/media/22",
+      "definition": "540p",
+      "downloadAddr": "https://example.com/media/23",
+      "duration": 40,
+      "dynamicCover": "https://example.com/media/24",
+      "encodeUserTag": "",
+      "encodedType": "normal",
+      "format": "mp4",
+      "height": 1024,
+      "id": "7000000000000000001",
+      "originCover": "https://example.com/media/25",
+      "playAddr": "https://example.com/media/26",
+      "ratio": "540p",
+      "size": 10588858,
+      "videoID": "7000000000000000001",
+      "videoQuality": "normal",
+      "volumeInfo": {
+        "Loudness": -8.3,
+        "Peak": 1
+      },
+      "width": 576,
+      "zoomCover": {
+        "240": "https://example.com/media/27",
+        "480": "https://example.com/media/28",
+        "720": "https://example.com/media/29",
+        "960": "https://example.com/media/30"
+      }
+    },
+    "music": {
+      "id": "5000000000000000001",
+      "title": "original sound",
+      "authorName": "Creator 1",
+      "original": true,
+      "duration": 40,
+      "playUrl": "https://example.com/media/31"
+    }
+  },
+  "video_h264_only_at_top_resolution": {
+    "id": "7000000000000000002",
+    "desc": "A caption with #hashtag",
+    "createTime": 1648361435,
+    "author": {
+      "id": "6000000000000000002",
+      "uniqueId": "creator2",
+      "nickname": "Creator 2"
+    },
+    "video": {
+      "PlayAddrStruct": {
+        "DataSize": 3763175,
+        "FileCs": "x",
+        "FileHash": "x",
+        "Height": 576,
+        "Uri": "x",
+        "UrlKey": "v0000000000000000_h264_540p_1120617",
+        "UrlList": [
+          "https://example.com/media/32",
+          "https://example.com/media/33",
+          "https://example.com/media/34"
+        ],
+        "Width": 864
+      },
+      "VQScore": "0",
+      "bitrate": 1120617,
+      "bitrateInfo": [
+        {
+          "Bitrate": 1120617,
+          "BitrateFPS": 30,
+          "CodecType": "h264",
+          "Format": "mp4",
+          "GearName": "normal_540_0",
+          "MVMAF": "",
+          "PlayAddr": {
+            "DataSize": 3763175,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 576,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_h264_540p_1120617",
+            "UrlList": [
+              "https://example.com/media/35",
+              "https://example.com/media/36",
+              "https://example.com/media/37"
+            ],
+            "Width": 864
+          },
+          "QualityType": 20,
+          "VideoExtra": "{\"PktOffsetMap\":\"\",\"mvmaf\":\"\",\"ufq\":\"\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"\",\"dec_info\":\"\",\"gearvqm\":\"\",\"audio_bit_rate\":32029}"
+        },
+        {
+          "Bitrate": 488082,
+          "BitrateFPS": 30,
+          "CodecType": "h264",
+          "Format": "mp4",
+          "GearName": "lowest_540_0",
+          "MVMAF": "",
+          "PlayAddr": {
+            "DataSize": 1639043,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 576,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_h264_540p_488082",
+            "UrlList": [
+              "https://example.com/media/38",
+              "https://example.com/media/39",
+              "https://example.com/media/40"
+            ],
+            "Width": 864
+          },
+          "QualityType": 25,
+          "VideoExtra": "{\"PktOffsetMap\":\"\",\"mvmaf\":\"\",\"ufq\":\"\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"\",\"dec_info\":\"\",\"gearvqm\":\"\",\"audio_bit_rate\":32029}"
+        }
+      ],
+      "claInfo": {
+        "enableAutoCaption": true,
+        "hasOriginalAudio": true,
+        "noCaptionReason": 1
+      },
+      "codecType": "h264",
+      "cover": "https://example.com/media/41",
+      "definition": "540p",
+      "downloadAddr": "https://example.com/media/42",
+      "duration": 26,
+      "dynamicCover": "https://example.com/media/43",
+      "encodeUserTag": "",
+      "encodedType": "normal",
+      "format": "mp4",
+      "height": 576,
+      "id": "7000000000000000002",
+      "originCover": "https://example.com/media/44",
+      "playAddr": "https://example.com/media/45",
+      "ratio": "540p",
+      "size": 3763175,
+      "videoID": "7000000000000000002",
+      "videoQuality": "normal",
+      "volumeInfo": {
+        "Loudness": -8.6,
+        "Peak": 1
+      },
+      "width": 864,
+      "zoomCover": {
+        "240": "https://example.com/media/46",
+        "480": "https://example.com/media/47",
+        "720": "https://example.com/media/48",
+        "960": "https://example.com/media/49"
+      }
+    },
+    "music": {
+      "id": "5000000000000000002",
+      "title": "original sound",
+      "authorName": "Creator 2",
+      "original": true,
+      "duration": 26,
+      "playUrl": "https://example.com/media/50"
+    }
+  },
+  "video_two_gears_same_resolution_and_codec": {
+    "id": "7000000000000000003",
+    "desc": "A caption with #hashtag",
+    "createTime": 1739731894,
+    "author": {
+      "id": "6000000000000000003",
+      "uniqueId": "creator3",
+      "nickname": "Creator 3"
+    },
+    "video": {
+      "PlayAddrStruct": {
+        "DataSize": 2358603,
+        "FileCs": "x",
+        "FileHash": "x",
+        "Height": 758,
+        "Uri": "x",
+        "UrlKey": "v0000000000000000_h264_540p_614619",
+        "UrlList": [
+          "https://example.com/media/51",
+          "https://example.com/media/52",
+          "https://example.com/media/53"
+        ],
+        "Width": 576
+      },
+      "VQScore": "53.85",
+      "bitrate": 614619,
+      "bitrateInfo": [
+        {
+          "Bitrate": 614619,
+          "BitrateFPS": 30,
+          "CodecType": "h264",
+          "Format": "mp4",
+          "GearName": "normal_540_0",
+          "MVMAF": "{\"v2.0\": {\"srv1\": {\"v1080\": 91.27, \"v960\": 90.273, \"v864\": 93.124, \"v720\": 92.654}, \"ori\": {\"v1080\": 81.535, \"v960\": 82.815, \"v864\": 86.457, \"v720\": 90.272}}}",
+          "PlayAddr": {
+            "DataSize": 2358603,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 758,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_h264_540p_614619",
+            "UrlList": [
+              "https://example.com/media/54",
+              "https://example.com/media/55",
+              "https://example.com/media/56"
+            ],
+            "Width": 576
+          },
+          "QualityType": 20,
+          "VideoExtra": "{\"PktOffsetMap\":\"[{\\\"time\\\": 1, \\\"offset\\\": 182423}, {\\\"time\\\": 2, \\\"offset\\\": 237704}, {\\\"time\\\": 3, \\\"offset\\\": 306621}, {\\\"time\\\": 4, \\\"offset\\\": 424367}, {\\\"time\\\": 5, \\\"offset\\\": 464934}, {\\\"time\\\": 10, \\\"offset\\\": 794515}]\",\"mvmaf\":\"{\\\"v2.0\\\": {\\\"srv1\\\": {\\\"v1080\\\": 91.27, \\\"v960\\\": 90.273, \\\"v864\\\": 93.124, \\\"v720\\\": 92.654}, \\\"ori\\\": {\\\"v1080\\\": 81.535, \\\"v960\\\": 82.815, \\\"v864\\\": 86.457, \\\"v720\\\": 90.272}}}\",\"ufq\":\"\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"13b7b37dea7241b0b7632fa88ed11584\",\"dec_info\":\"\",\"gearvqm\":\"\",\"audio_bit_rate\":32249}"
+        },
+        {
+          "Bitrate": 412252,
+          "BitrateFPS": 30,
+          "CodecType": "h265_hvc1",
+          "Format": "mp4",
+          "GearName": "musical.ly/cae_bvc1_bvc2_group_540p_256_1_bytevc1",
+          "MVMAF": "{\"v2.0\": {\"srv1\": {\"v1080\": 94.903, \"v960\": 95.954, \"v864\": 96.612, \"v720\": 98.061}, \"ori\": {\"v1080\": 88.434, \"v960\": 88.452, \"v864\": 90.151, \"v720\": 91.597}}}",
+          "PlayAddr": {
+            "DataSize": 1582019,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 758,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_bytevc1_540p_412252",
+            "UrlList": [
+              "https://example.com/media/57",
+              "https://example.com/media/58",
+              "https://example.com/media/59"
+            ],
+            "Width": 576
+          },
+          "QualityType": 232501,
+          "VideoExtra": "{\"PktOffsetMap\":\"[{\\\"time\\\": 1, \\\"offset\\\": 142106}, {\\\"time\\\": 2, \\\"offset\\\": 167666}, {\\\"time\\\": 3, \\\"offset\\\": 220829}, {\\\"time\\\": 4, \\\"offset\\\": 297864}, {\\\"time\\\": 5, \\\"offset\\\": 326632}, {\\\"time\\\": 10, \\\"offset\\\": 533030}]\",\"mvmaf\":\"{\\\"v2.0\\\": {\\\"srv1\\\": {\\\"v1080\\\": 94.903, \\\"v960\\\": 95.954, \\\"v864\\\": 96.612, \\\"v720\\\": 98.061}, \\\"ori\\\": {\\\"v1080\\\": 88.434, \\\"v960\\\": 88.452, \\\"v864\\\": 90.151, \\\"v720\\\": 91.597}}}\",\"ufq\":\"{\\\"enh\\\":63.314,\\\"playback\\\":{\\\"ori\\\":55.748,\\\"srv1\\\":61.877},\\\"src\\\":63.314,\\\"trans\\\":55.748,\\\"version\\\":\\\"v1.2\\\"}\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"d278abee34157e41d22c23d12a2bc339\",\"dec_info\":\"\",\"gearvqm\":\"\",\"audio_bit_rate\":32250}"
+        },
+        {
+          "Bitrate": 294971,
+          "BitrateFPS": 30,
+          "CodecType": "h264",
+          "Format": "mp4",
+          "GearName": "lowest_540_0",
+          "MVMAF": "{\"v2.0\": {\"srv1\": {\"v1080\": 74.335, \"v960\": 77.365, \"v864\": 80.313, \"v720\": 79.555}, \"ori\": {\"v1080\": 61.952, \"v960\": 66.11, \"v864\": 69.571, \"v720\": 77.073}}}",
+          "PlayAddr": {
+            "DataSize": 1131953,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 758,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_h264_540p_294971",
+            "UrlList": [
+              "https://example.com/media/60",
+              "https://example.com/media/61",
+              "https://example.com/media/62"
+            ],
+            "Width": 576
+          },
+          "QualityType": 25,
+          "VideoExtra": "{\"PktOffsetMap\":\"[{\\\"time\\\": 1, \\\"offset\\\": 97030}, {\\\"time\\\": 2, \\\"offset\\\": 120603}, {\\\"time\\\": 3, \\\"offset\\\": 157028}, {\\\"time\\\": 4, \\\"offset\\\": 213967}, {\\\"time\\\": 5, \\\"offset\\\": 233197}, {\\\"time\\\": 10, \\\"offset\\\": 387431}]\",\"mvmaf\":\"{\\\"v2.0\\\": {\\\"srv1\\\": {\\\"v1080\\\": 74.335, \\\"v960\\\": 77.365, \\\"v864\\\": 80.313, \\\"v720\\\": 79.555}, \\\"ori\\\": {\\\"v1080\\\": 61.952, \\\"v960\\\": 66.11, \\\"v864\\\": 69.571, \\\"v720\\\": 77.073}}}\",\"ufq\":\"\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"13b7b37dea7241b0b7632fa88ed11584\",\"dec_info\":\"\",\"gearvqm\":\"\",\"audio_bit_rate\":32249}"
+        },
+        {
+          "Bitrate": 155231,
+          "BitrateFPS": 30,
+          "CodecType": "h265_hvc1",
+          "Format": "mp4",
+          "GearName": "musical.ly/cae_bvc1_bvc2_group_540p_360_2_bytevc1",
+          "MVMAF": "",
+          "PlayAddr": {
+            "DataSize": 595701,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 758,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_bytevc1_540p_155231",
+            "UrlList": [
+              "https://example.com/media/63",
+              "https://example.com/media/64",
+              "https://example.com/media/65"
+            ],
+            "Width": 576
+          },
+          "QualityType": 233602,
+          "VideoExtra": "{\"PktOffsetMap\":\"[{\\\"time\\\": 1, \\\"offset\\\": 65750}, {\\\"time\\\": 2, \\\"offset\\\": 76927}, {\\\"time\\\": 3, \\\"offset\\\": 98261}, {\\\"time\\\": 4, \\\"offset\\\": 126471}, {\\\"time\\\": 5, \\\"offset\\\": 137897}, {\\\"time\\\": 10, \\\"offset\\\": 214695}]\",\"mvmaf\":\"\",\"ufq\":\"\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"d278abee34157e41d22c23d12a2bc339\",\"dec_info\":\"\",\"gearvqm\":\"\",\"audio_bit_rate\":32249}"
+        }
+      ],
+      "claInfo": {
+        "enableAutoCaption": false,
+        "hasOriginalAudio": false,
+        "noCaptionReason": 2
+      },
+      "codecType": "h264",
+      "cover": "https://example.com/media/66",
+      "definition": "540p",
+      "downloadAddr": "https://example.com/media/67",
+      "duration": 30,
+      "dynamicCover": "https://example.com/media/68",
+      "encodeUserTag": "",
+      "encodedType": "normal",
+      "format": "mp4",
+      "height": 758,
+      "id": "7000000000000000003",
+      "originCover": "https://example.com/media/69",
+      "playAddr": "https://example.com/media/70",
+      "ratio": "540p",
+      "size": 2358603,
+      "videoID": "7000000000000000003",
+      "videoQuality": "normal",
+      "volumeInfo": {
+        "Loudness": -6.1,
+        "Peak": 1
+      },
+      "width": 576,
+      "zoomCover": {
+        "240": "https://example.com/media/71",
+        "480": "https://example.com/media/72",
+        "720": "https://example.com/media/73",
+        "960": "https://example.com/media/74"
+      }
+    },
+    "music": {
+      "id": "5000000000000000003",
+      "title": "original sound",
+      "authorName": "Creator 3",
+      "original": false,
+      "duration": 60,
+      "playUrl": "https://example.com/media/75"
+    }
+  },
+  "video_long": {
+    "id": "7000000000000000004",
+    "desc": "A caption with #hashtag",
+    "createTime": 1787198925,
+    "author": {
+      "id": "6000000000000000004",
+      "uniqueId": "creator4",
+      "nickname": "Creator 4"
+    },
+    "video": {
+      "PlayAddrStruct": {
+        "DataSize": 67449244,
+        "FileCs": "x",
+        "FileHash": "x",
+        "Height": 576,
+        "Uri": "x",
+        "UrlKey": "v0000000000000000_h264_540p_2935766",
+        "UrlList": [
+          "https://example.com/media/76",
+          "https://example.com/media/77",
+          "https://example.com/media/78"
+        ],
+        "Width": 1024
+      },
+      "VQScore": "63.23",
+      "bitrate": 2935766,
+      "bitrateInfo": [
+        {
+          "Bitrate": 2935766,
+          "BitrateFPS": 30,
+          "CodecType": "h264",
+          "Format": "mp4",
+          "GearName": "normal_540_0",
+          "MVMAF": "{\"v2.0\": {\"srv1\": {\"v1080\": 85.518, \"v960\": 90.929, \"v864\": 93.792, \"v720\": 96.647}, \"ori\": {\"v1080\": 77.904, \"v960\": 80.234, \"v864\": 84.133, \"v720\": 88.073}}}",
+          "PlayAddr": {
+            "DataSize": 67449244,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 576,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_h264_540p_2935766",
+            "UrlList": [
+              "https://example.com/media/79",
+              "https://example.com/media/80",
+              "https://example.com/media/81"
+            ],
+            "Width": 1024
+          },
+          "QualityType": 20,
+          "VideoExtra": "{\"PktOffsetMap\":\"[{\\\"time\\\": 1, \\\"offset\\\": 419289}, {\\\"time\\\": 2, \\\"offset\\\": 670042}, {\\\"time\\\": 3, \\\"offset\\\": 949514}, {\\\"time\\\": 4, \\\"offset\\\": 1199498}, {\\\"time\\\": 5, \\\"offset\\\": 1351599}, {\\\"time\\\": 10, \\\"offset\\\": 2798226}]\",\"mvmaf\":\"{\\\"v2.0\\\": {\\\"srv1\\\": {\\\"v1080\\\": 85.518, \\\"v960\\\": 90.929, \\\"v864\\\": 93.792, \\\"v720\\\": 96.647}, \\\"ori\\\": {\\\"v1080\\\": 77.904, \\\"v960\\\": 80.234, \\\"v864\\\": 84.133, \\\"v720\\\": 88.073}}}\",\"ufq\":\"\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"25b3faebdda74a9e438e851988a6efcc\",\"dec_info\":\"\",\"gearvqm\":\"\",\"audio_bit_rate\":32042}"
+        },
+        {
+          "Bitrate": 2754319,
+          "BitrateFPS": 35,
+          "CodecType": "h265_hvc1",
+          "Format": "mp4",
+          "GearName": "adapt_lowest_1080_1",
+          "MVMAF": "{\"v2.0\": {\"srv1\": {\"v1080\": 88.363, \"v960\": 90.361, \"v864\": 92.365, \"v720\": 94.956}, \"ori\": {\"v1080\": 82.035, \"v960\": 85.121, \"v864\": 87.612, \"v720\": 91.275}}}",
+          "PlayAddr": {
+            "DataSize": 63267757,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 1080,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_bytevc1_1080p_2754319",
+            "UrlList": [
+              "https://example.com/media/82",
+              "https://example.com/media/83",
+              "https://example.com/media/84"
+            ],
+            "Width": 1920
+          },
+          "QualityType": 2,
+          "VideoExtra": "{\"PktOffsetMap\":\"[{\\\"time\\\": 1, \\\"offset\\\": 473035}, {\\\"time\\\": 2, \\\"offset\\\": 733015}, {\\\"time\\\": 3, \\\"offset\\\": 1012581}, {\\\"time\\\": 4, \\\"offset\\\": 1296131}, {\\\"time\\\": 5, \\\"offset\\\": 1410350}, {\\\"time\\\": 10, \\\"offset\\\": 2681504}]\",\"mvmaf\":\"{\\\"v2.0\\\": {\\\"srv1\\\": {\\\"v1080\\\": 88.363, \\\"v960\\\": 90.361, \\\"v864\\\": 92.365, \\\"v720\\\": 94.956}, \\\"ori\\\": {\\\"v1080\\\": 82.035, \\\"v960\\\": 85.121, \\\"v864\\\": 87.612, \\\"v720\\\": 91.275}}}\",\"ufq\":\"{\\\"enh\\\":76.722,\\\"playback\\\":{\\\"ori\\\":63.499,\\\"srv1\\\":69.827},\\\"src\\\":76.722,\\\"trans\\\":63.499,\\\"version\\\":\\\"v1.2\\\"}\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"e91245375450b02a8794eaf362ea32ee\",\"dec_info\":\"\",\"gearvqm\":\"{\\\"v3.0\\\": {\\\"ori\\\": 86.686, \\\"sr20\\\": -1}}\",\"audio_bit_rate\":64066,\"ps_info\":\"{\\\"vps\\\": \\\"AQwC//8BYAAAAwAAAwAAAwAAAwCWAACIJElgSA==\\\", \\\"sps\\\": \\\"AQMBYAAAAwAAAwAAAwAAAwCWAACgA8CAEOWWIJElySUQTPCEREREREYR8xPOX+/+v82fy/+v8yh+S/3/1/mz+X/1/jOEAg5qAgICCAAAAwAI\\\", \\\"pps\\\": \\\"AcElPAiQ\\\"}\"}"
+        },
+        {
+          "Bitrate": 1313810,
+          "BitrateFPS": 30,
+          "CodecType": "h265_hvc1",
+          "Format": "mp4",
+          "GearName": "adapt_lower_720_1",
+          "MVMAF": "{\"v2.0\": {\"srv1\": {\"v1080\": 78.236, \"v960\": 81.865, \"v864\": 84.325, \"v720\": 88.698}, \"ori\": {\"v1080\": 69.989, \"v960\": 74.132, \"v864\": 77.463, \"v720\": 82.675}}}",
+          "PlayAddr": {
+            "DataSize": 30184790,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 720,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_bytevc1_720p_1313810",
+            "UrlList": [
+              "https://example.com/media/85",
+              "https://example.com/media/86",
+              "https://example.com/media/87"
+            ],
+            "Width": 1280
+          },
+          "QualityType": 14,
+          "VideoExtra": "{\"PktOffsetMap\":\"[{\\\"time\\\": 1, \\\"offset\\\": 311879}, {\\\"time\\\": 2, \\\"offset\\\": 423342}, {\\\"time\\\": 3, \\\"offset\\\": 560220}, {\\\"time\\\": 4, \\\"offset\\\": 696784}, {\\\"time\\\": 5, \\\"offset\\\": 760772}, {\\\"time\\\": 10, \\\"offset\\\": 1415906}]\",\"mvmaf\":\"{\\\"v2.0\\\": {\\\"srv1\\\": {\\\"v1080\\\": 78.236, \\\"v960\\\": 81.865, \\\"v864\\\": 84.325, \\\"v720\\\": 88.698}, \\\"ori\\\": {\\\"v1080\\\": 69.989, \\\"v960\\\": 74.132, \\\"v864\\\": 77.463, \\\"v720\\\": 82.675}}}\",\"ufq\":\"{\\\"enh\\\":76.722,\\\"playback\\\":{\\\"ori\\\":54.464,\\\"srv1\\\":62.711},\\\"src\\\":76.722,\\\"trans\\\":54.464,\\\"version\\\":\\\"v1.2\\\"}\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"4b5574e16dede7b5389a11ced23de6fa\",\"dec_info\":\"\",\"gearvqm\":\"{\\\"v3.0\\\": {\\\"ori\\\": 78.548, \\\"sr20\\\": 84.81}}\",\"audio_bit_rate\":48056,\"ps_info\":\"{\\\"vps\\\": \\\"AQwC//8BYAAAAwAAAwAAAwAAAwB4AACIJElgSA==\\\", \\\"sps\\\": \\\"AQMBYAAAAwAAAwAAAwAAAwB4AACgAoCALRZYgkSXJJRBM8IRERERERhHzE85f7/6/zZ/L/6/zKH5L/f/X+bP5f/X+M4QCDmoCAgIIAAAAwAgAAADA8E=\\\", \\\"pps\\\": \\\"AcElPAiQ\\\"}\"}"
+        },
+        {
+          "Bitrate": 1090395,
+          "BitrateFPS": 30,
+          "CodecType": "h265_hvc1",
+          "Format": "mp4",
+          "GearName": "adapt_540_1",
+          "MVMAF": "{\"v2.0\": {\"srv1\": {\"v1080\": 73.957, \"v960\": 78.122, \"v864\": 81.303, \"v720\": 86.425}, \"ori\": {\"v1080\": 64.437, \"v960\": 68.337, \"v864\": 72.341, \"v720\": 78.428}}}",
+          "PlayAddr": {
+            "DataSize": 25051838,
+            "FileCs": "x",
+            "FileHash": "x",
+            "Height": 576,
+            "Uri": "x",
+            "UrlKey": "v0000000000000000_bytevc1_540p_1090395",
+            "UrlList": [
+              "https://example.com/media/88",
+              "https://example.com/media/89",
+              "https://example.com/media/90"
+            ],
+            "Width": 1024
+          },
+          "QualityType": 28,
+          "VideoExtra": "{\"PktOffsetMap\":\"[{\\\"time\\\": 1, \\\"offset\\\": 298273}, {\\\"time\\\": 2, \\\"offset\\\": 404117}, {\\\"time\\\": 3, \\\"offset\\\": 528043}, {\\\"time\\\": 4, \\\"offset\\\": 649272}, {\\\"time\\\": 5, \\\"offset\\\": 705474}, {\\\"time\\\": 10, \\\"offset\\\": 1310226}]\",\"mvmaf\":\"{\\\"v2.0\\\": {\\\"srv1\\\": {\\\"v1080\\\": 73.957, \\\"v960\\\": 78.122, \\\"v864\\\": 81.303, \\\"v720\\\": 86.425}, \\\"ori\\\": {\\\"v1080\\\": 64.437, \\\"v960\\\": 68.337, \\\"v864\\\": 72.341, \\\"v720\\\": 78.428}}}\",\"ufq\":\"{\\\"enh\\\":76.722,\\\"playback\\\":{\\\"ori\\\":50.3,\\\"srv1\\\":59.82},\\\"src\\\":76.722,\\\"trans\\\":50.3,\\\"version\\\":\\\"v1.2\\\"}\",\"volume_info_json\":\"\",\"transcode_feature_id\":\"4b5574e16dede7b5389a11ced23de6fa\",\"dec_info\":\"\",\"gearvqm\":\"{\\\"v3.0\\\": {\\\"ori\\\": 74.341, \\\"sr20\\\": 82.598}}\",\"audio_bit_rate\":48056,\"ps_info\":\"{\\\"vps\\\": \\\"AQwC//8BYAAAAwAAAwAAAwAAAwB4AACIJElgSA==\\\", \\\"sps\\\": \\\"AQMBYAAAAwAAAwAAAwAAAwB4AACgAgCAJBZYgkSXJJRBM8IRERERERhHzE85f7/6/zZ/L/6/zKH5L/f/X+bP5f/X+M4QCDmoCAgIIAAAAwAgAAADA8E=\\\", \\\"pps\\\": \\\"AcElPAiQ\\\"}\"}"
+        }
+      ],
+      "claInfo": {
+        "captionInfos": [
+          {
+            "captionFormat": "webvtt",
+            "claSubtitleID": "7676024720038595329",
+            "expire": "1792064864",
+            "isAutoGen": true,
+            "isOriginalCaption": true,
+            "language": "eng-US",
+            "languageCode": "en",
+            "languageID": "2",
+            "subID": "1766488353",
+            "subtitleType": "1",
+            "translationType": "0",
+            "url": "https://example.com/media/91",
+            "urlList": [
+              "https://example.com/media/92",
+              "https://example.com/media/93",
+              "https://example.com/media/94"
+            ],
+            "variant": "big_caption"
+          }
+        ],
+        "captionsType": 1,
+        "enableAutoCaption": true,
+        "hasOriginalAudio": true,
+        "originalLanguageInfo": {
+          "canTranslateRealTimeNoCheck": true,
+          "language": "eng-US",
+          "languageCode": "en",
+          "languageID": "2"
+        }
+      },
+      "codecType": "h264",
+      "cover": "https://example.com/media/95",
+      "definition": "540p",
+      "duration": 183,
+      "dynamicCover": "https://example.com/media/96",
+      "encodeUserTag": "",
+      "encodedType": "normal",
+      "format": "mp4",
+      "height": 576,
+      "id": "7000000000000000004",
+      "originCover": "https://example.com/media/97",
+      "playAddr": "https://example.com/media/98",
+      "ratio": "540p",
+      "size": 67449244,
+      "subtitleInfos": [
+        {
+          "Format": "webvtt",
+          "LanguageCodeName": "eng-US",
+          "LanguageID": "2",
+          "Size": 1559,
+          "Source": "ASR",
+          "Url": "https://example.com/media/99",
+          "UrlExpire": 1792064864,
+          "Version": "1:big_caption"
+        }
+      ],
+      "videoID": "7000000000000000004",
+      "videoQuality": "normal",
+      "volumeInfo": {
+        "Loudness": -6.3,
+        "Peak": 1
+      },
+      "width": 1024,
+      "zoomCover": {
+        "240": "https://example.com/media/100",
+        "480": "https://example.com/media/101",
+        "720": "https://example.com/media/102",
+        "960": "https://example.com/media/103"
+      }
+    },
+    "music": {
+      "id": "5000000000000000004",
+      "title": "original sound",
+      "authorName": "Creator 4",
+      "original": true,
+      "duration": 224,
+      "playUrl": "https://example.com/media/104"
+    }
+  },
+  "photo_many_images": {
+    "id": "7000000000000000005",
+    "desc": "A caption with #hashtag",
+    "createTime": 1760325240,
+    "author": {
+      "id": "6000000000000000005",
+      "uniqueId": "creator5",
+      "nickname": "Creator 5"
+    },
+    "video": {
+      "cover": "https://example.com/media/105",
+      "duration": 0,
+      "height": 0,
+      "id": "7000000000000000005",
+      "originCover": "https://example.com/media/106",
+      "ratio": "",
+      "volumeInfo": {},
+      "width": 0
+    },
+    "music": {
+      "id": "5000000000000000005",
+      "title": "original sound",
+      "authorName": "Creator 5",
+      "original": true,
+      "duration": 42,
+      "playUrl": "https://example.com/media/107"
+    },
+    "imagePost": {
+      "cover": {
+        "imageHeight": 716,
+        "imageURL": {
+          "urlList": [
+            "https://example.com/media/108",
+            "https://example.com/media/109"
+          ]
+        },
+        "imageWidth": 736
+      },
+      "images": [
+        {
+          "imageHeight": 716,
+          "imageURL": {
+            "urlList": [
+              "https://example.com/media/110",
+              "https://example.com/media/111"
+            ]
+          },
+          "imageWidth": 736
+        },
+        {
+          "imageHeight": 716,
+          "imageURL": {
+            "urlList": [
+              "https://example.com/media/112",
+              "https://example.com/media/113"
+            ]
+          },
+          "imageWidth": 700
+        },
+        {
+          "imageHeight": 716,
+          "imageURL": {
+            "urlList": [
+              "https://example.com/media/114",
+              "https://example.com/media/115"
+            ]
+          },
+          "imageWidth": 736
+        },
+        {
+          "imageHeight": 716,
+          "imageURL": {
+            "urlList": [
+              "https://example.com/media/116",
+              "https://example.com/media/117"
+            ]
+          },
+          "imageWidth": 700
+        },
+        {
+          "imageHeight": 2560,
+          "imageURL": {
+            "urlList": [
+              "https://example.com/media/118",
+              "https://example.com/media/119"
+            ]
+          },
+          "imageWidth": 1440
+        },
+        {
+          "imageHeight": 248,
+          "imageURL": {
+            "urlList": [
+              "https://example.com/media/120",
+              "https://example.com/media/121"
+            ]
+          },
+          "imageWidth": 320
+        },
+        {
+          "imageHeight": 248,
+          "imageURL": {
+            "urlList": [
+              "https://example.com/media/122",
+              "https://example.com/media/123"
+            ]
+          },
+          "imageWidth": 320
+        },
+        {
+          "imageHeight": 248,
+          "imageURL": {
+            "urlList": [
+              "https://example.com/media/124",
+              "https://example.com/media/125"
+            ]
+          },
+          "imageWidth": 320
+        },
+        {
+          "imageHeight": 864,
+          "imageURL": {
+            "urlList": [
+              "https://example.com/media/126",
+              "https://example.com/media/127"
+            ]
+          },
+          "imageWidth": 736
+        }
+      ],
+      "shareCover": {
+        "imageHeight": 716,
+        "imageURL": {
+          "urlList": [
+            "https://example.com/media/128",
+            "https://example.com/media/129"
+          ]
+        },
+        "imageWidth": 736
+      },
+      "title": "text"
+    }
+  },
+  "photo_without_audio_url": {
+    "id": "7000000000000000006",
+    "desc": "A caption with #hashtag",
+    "createTime": 1752543671,
+    "author": {
+      "id": "6000000000000000006",
+      "uniqueId": "creator6",
+      "nickname": "Creator 6"
+    },
+    "video": {
+      "cover": "https://example.com/media/130",
+      "duration": 0,
+      "height": 0,
+      "id": "7000000000000000006",
+      "originCover": "https://example.com/media/131",
+      "ratio": "",
+      "volumeInfo": {},
+      "width": 0
+    },
+    "music": {
+      "id": "5000000000000000006",
+      "title": "original sound",
+      "authorName": "Creator 6",
+      "original": false,
+      "duration": 60,
+      "playUrl": ""
+    },
+    "imagePost": {
+      "cover": {
+        "imageHeight": 1920,
+        "imageURL": {
+          "urlList": [
+            "https://example.com/media/132",
+            "https://example.com/media/133"
+          ]
+        },
+        "imageWidth": 1440
+      },
+      "images": [
+        {
+          "imageHeight": 1920,
+          "imageURL": {
+            "urlList": [
+              "https://example.com/media/134",
+              "https://example.com/media/135"
+            ]
+          },
+          "imageWidth": 1440
+        },
+        {
+          "imageHeight": 1096,
+          "imageURL": {
+            "urlList": [
+              "https://example.com/media/136",
+              "https://example.com/media/137"
+            ]
+          },
+          "imageWidth": 828
+        }
+      ],
+      "shareCover": {
+        "imageHeight": 1920,
+        "imageURL": {
+          "urlList": [
+            "https://example.com/media/138",
+            "https://example.com/media/139"
+          ]
+        },
+        "imageWidth": 1440
+      },
+      "title": "text"
+    }
+  }
+}

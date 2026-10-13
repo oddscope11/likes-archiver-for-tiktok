@@ -10,6 +10,9 @@
     "service_worker": "background.js",
     "type": "module"
   },
+  "permissions": [
+    "scripting"
+  ],
   "host_permissions": [
     "https://www.tiktok.com/*"
   ],
