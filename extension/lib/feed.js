@@ -19,6 +19,8 @@ export function parsePage(body) {
 
   const statusCode = body.statusCode ?? body.status_code;
   if (statusCode !== 0) {
+    // TikTok wants the user to solve a captcha before it answers.
+    if (body.type === "verify") throw new FeedError("verification");
     throw new FeedError("tiktok_error", `status ${statusCode} ${body.status_msg ?? ""}`.trim());
   }
 

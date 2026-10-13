@@ -65,6 +65,11 @@ test("a TikTok error status stops the walk", async () => {
   await assert.rejects(collect(f.options), rejectsWith("tiktok_error"));
 });
 
+test("a verification request is reported as such", async () => {
+  const f = feed([{ statusCode: 10000, type: "verify" }]);
+  await assert.rejects(collect(f.options), rejectsWith("verification"));
+});
+
 test("an unchanged cursor stops the walk instead of looping", async () => {
   const f = feed([page(["a"], "200", true), page(["b"], "200", true)]);
   await assert.rejects(collect(f.options), rejectsWith("stuck"));

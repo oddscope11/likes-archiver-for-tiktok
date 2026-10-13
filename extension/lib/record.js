@@ -29,3 +29,8 @@ export function buildRecord(item, existing, { now, newerCursor, olderCursor }) {
     raw: item
   };
 }
+
+// True when the record says the item is saved and every file is still there.
+export function isSaved(record, fileExists) {
+  return record.media?.status === "saved" && record.media.files.every((entry) => fileExists(entry.file));
+}

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildRecord, classify, isValidId } from "../extension/lib/record.js";
+import { buildRecord, classify, isSaved, isValidId } from "../extension/lib/record.js";
 
 const seen = (now) => ({ now, newerCursor: "200", olderCursor: "100" });
 
@@ -48,4 +48,15 @@ test("a later sighting keeps history and saved media, and refreshes the raw data
   assert.deepEqual(second.feedWindow, { newerCursor: "200", olderCursor: "100" });
   assert.deepEqual(second.media, { file: "a.mp4" });
   assert.equal(second.raw.desc, "new");
+});
+
+test("an item is saved only if its record says so and every file is present", () => {
+  const present = new Set(["Likes/a.jpg", "Likes/b.jpg"]);
+  const exists = (file) => present.has(file);
+  const saved = (...files) => ({ media: { status: "saved", files: files.map((file) => ({ file })) } });
+
+  assert.ok(isSaved(saved("Likes/a.jpg", "Likes/b.jpg"), exists));
+  assert.ok(!isSaved(saved("Likes/a.jpg", "Likes/missing.jpg"), exists));
+  assert.ok(!isSaved({ media: null }, exists));
+  assert.ok(!isSaved({ media: { status: "failed", reason: "http" } }, exists));
 });

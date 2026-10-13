@@ -49,7 +49,12 @@ This is a rewrite; the original version lives in `references/v1/`.
 <archive>/
   archive.json      { format, createdAt, account, lastCompleteScanAt }
   items/<id>.json   One record per liked item
+  Likes/            The media files
+    <handle>_<id>.mp4                 a video
+    <handle>_<id>_01.jpg, _02.jpg…    a photo post's images, in order
+    <handle>_<id>_audio.m4a           a photo post's audio
 ```
+
 
 Each item record holds:
 
@@ -57,7 +62,10 @@ Each item record holds:
 - `firstSeenAt`, and `seenAt`: every scan that found the item in the feed
 - `feedWindow`: the page cursors around the item when first seen. Cursors look
   like millisecond timestamps of the like, so they bracket when it was liked.
-- `media`: what has been saved for the item (`null` until downloaded)
+- `media`: `null` until a download is attempted, then either
+  `{ status: "saved", savedAt, files: [{ role, file, bytes, stream }], notes }`
+  or `{ status: "failed", at, reason, detail }`. Failed items are retried on
+  the next run.
 - `raw`: the item exactly as TikTok returned it on the latest scan
 
 ## Layout

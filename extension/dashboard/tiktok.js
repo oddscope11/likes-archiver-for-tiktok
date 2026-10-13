@@ -89,6 +89,7 @@ export async function fetchLikesPage(tabId, secUid, cursor) {
   const result = await runInPage(tabId, pageFetchLikes, [secUid, cursor]);
   if (!result) throw new TikTokError("tab_unreachable", "no result from the page");
   if (result.networkError) throw new TikTokError("network", result.networkError);
+  if (result.status === 429) throw new TikTokError("rate_limited");
   if (result.status !== 200) throw new TikTokError("http", String(result.status));
   // TikTok answers 200 with an empty body when it refuses a request.
   if (!result.text) throw new TikTokError("refused");
