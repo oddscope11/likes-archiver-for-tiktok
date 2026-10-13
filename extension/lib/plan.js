@@ -5,16 +5,6 @@ import { rankStreams } from "./select.js";
 
 export const MEDIA_DIR = "Likes";
 
-// Media types we accept for each kind of file, and the extension each gets.
-// Anything else (such as an HTML error page) is treated as a failed download.
-export const EXTENSIONS = {
-  video: { "video/mp4": "mp4" },
-  image: { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" },
-  // TikTok serves some sounds as an MP4 labelled video/mp4. It is kept as .mp4,
-  // which is accurate whether or not the file also holds a picture track.
-  audio: { "audio/mp4": "m4a", "audio/mpeg": "mp3", "audio/x-m4a": "m4a", "video/mp4": "mp4" }
-};
-
 // Creator handles become part of file names, so keep only safe characters.
 export function safeHandle(uniqueId) {
   const cleaned = String(uniqueId ?? "")

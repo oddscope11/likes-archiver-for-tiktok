@@ -1,6 +1,6 @@
 // Streams media files from TikTok straight into the archive folder.
 
-import { EXTENSIONS } from "../lib/plan.js";
+import { sniffExtension, SNIFF_BYTES } from "../lib/sniff.js";
 
 export class DownloadError extends Error {
   constructor(code, detail = "") {
@@ -56,22 +56,45 @@ async function downloadFrom(url, dir, part, signal) {
   }
   if (!response.ok) throw new DownloadError("http", String(response.status));
 
-  // The media type both names the file and catches error pages served as 200.
-  const type = (response.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
-  const extension = EXTENSIONS[part.role][type];
-  if (!extension || !response.body) {
-    await response.body?.cancel().catch(() => {});
-    throw new DownloadError("wrong_type", type || "no content type");
+  if (!response.body) throw new DownloadError("wrong_type", "empty response");
+  const reader = response.body.getReader();
+
+  // Read enough of the start to tell what kind of file this really is.
+  const buffered = [];
+  let head = new Uint8Array(0);
+  try {
+    while (head.length < SNIFF_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffered.push(value);
+      head = new Uint8Array([...head, ...value.subarray(0, SNIFF_BYTES)]);
+    }
+  } catch (err) {
+    if (err.name === "AbortError") throw err;
+    throw new DownloadError("interrupted", err.message);
+  }
+
+  const extension = sniffExtension(head, part.role);
+  if (!extension) {
+    await reader.cancel().catch(() => {});
+    throw new DownloadError("wrong_type", response.headers.get("content-type") ?? "unknown type");
   }
 
   const name = `${part.stem}.${extension}`;
   const fileHandle = await dir.getFileHandle(name, { create: true });
   const writable = await fileHandle.createWritable();
   try {
-    // The browser writes to a temporary file and only replaces `name` when the
-    // stream finishes, so an interrupted download never leaves a partial file.
-    await response.body.pipeTo(writable, { signal });
+    // The browser writes to a temporary file and only replaces `name` on
+    // close, so an interrupted download never leaves a partial file.
+    for (const chunk of buffered) await writable.write(chunk);
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      await writable.write(value);
+    }
+    await writable.close();
   } catch (err) {
+    await reader.cancel().catch(() => {});
     await writable.abort().catch(() => {});
     if ((await fileHandle.getFile()).size === 0) await removeQuietly(dir, name);
     if (err.name === "AbortError") throw err;

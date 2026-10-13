@@ -52,7 +52,7 @@ This is a rewrite; the original version lives in `references/v1/`.
   Likes/            The media files
     <handle>_<id>.mp4                 a video
     <handle>_<id>_01.jpg, _02.jpg…    a photo post's images, in order
-    <handle>_<id>_audio.m4a           a photo post's audio (.m4a, .mp3 or .mp4)
+    <handle>_<id>_audio.mp3           a photo post's audio (.mp3 or .m4a)
 ```
 
 
