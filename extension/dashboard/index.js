@@ -144,7 +144,8 @@ function renderCounts(counts) {
 function reportFailure(item, media) {
   const line = document.createElement("li");
   const reason = ITEM_REASONS[media.reason] ?? "something went wrong";
-  line.textContent = `@${safeHandle(item.author?.uniqueId)} (${item.id}): ${reason}${media.detail ? ` (${media.detail})` : ""}`;
+  const details = [media.part, media.detail].filter(Boolean).join(": ");
+  line.textContent = `@${safeHandle(item.author?.uniqueId)} (${item.id}): ${reason}${details ? ` (${details})` : ""}`;
   failuresList.append(line);
 }
 
@@ -180,8 +181,10 @@ async function saveItem(item, mediaDir, knownFiles, signal) {
 
   const files = [];
   const notes = [...plan.notes];
+  let current = null;
   try {
     for (const part of plan.parts) {
+      current = part;
       const saved = await downloadPart(mediaDir, part, signal);
       knownFiles.add(saved.name);
       files.push({
@@ -197,6 +200,7 @@ async function saveItem(item, mediaDir, knownFiles, signal) {
       status: "failed",
       at: new Date().toISOString(),
       reason: err instanceof DownloadError ? err.code : "error",
+      part: current?.stem,
       detail: err instanceof DownloadError ? err.detail : err.message
     };
   }

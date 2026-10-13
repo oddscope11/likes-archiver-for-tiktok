@@ -52,7 +52,7 @@ This is a rewrite; the original version lives in `references/v1/`.
   Likes/            The media files
     <handle>_<id>.mp4                 a video
     <handle>_<id>_01.jpg, _02.jpg…    a photo post's images, in order
-    <handle>_<id>_audio.m4a           a photo post's audio
+    <handle>_<id>_audio.m4a           a photo post's audio (.m4a, .mp3 or .mp4)
 ```
 
 
@@ -64,7 +64,7 @@ Each item record holds:
   like millisecond timestamps of the like, so they bracket when it was liked.
 - `media`: `null` until a download is attempted, then either
   `{ status: "saved", savedAt, files: [{ role, file, bytes, stream }], notes }`
-  or `{ status: "failed", at, reason, detail }`. Failed items are retried on
+  or `{ status: "failed", at, reason, part, detail }`. Failed items are retried on
   the next run.
 - `raw`: the item exactly as TikTok returned it on the latest scan
 
