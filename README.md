@@ -46,8 +46,12 @@ This is a rewrite; the original version lives in `references/v1/`.
 ## Staying on TikTok's good side
 
 On 2026-10-13, the first day of development, TikTok showed the test account
-two captchas. The first came before any video had been downloaded. The cause
-was not established. What happened that day, most likely first:
+two captchas. Both appeared on the TikTok tab while it was being used by hand;
+no run of the extension was interrupted, so its verification handling has not
+yet been seen working live. As best remembered, the first came before the
+extension's first scan, which leaves only causes 1 and 2 below for that one,
+and the second came after scanning had started. The cause was not established.
+What happened that day, most likely first:
 
 1. A freshly installed browser with a new login.
 2. Ad-hoc exploration: about ten likes-feed requests in a few minutes through
