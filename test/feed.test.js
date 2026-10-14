@@ -43,6 +43,14 @@ test("walks every page and follows the cursor", async () => {
   assert.equal(f.pauses(), 1);
 });
 
+test("can start from a saved cursor", async () => {
+  const f = feed([page(["c"], "100", false)]);
+  const windows = [];
+  for await (const p of walkFeed({ ...f.options, startCursor: "200" })) windows.push([p.newerCursor, p.olderCursor]);
+  assert.deepEqual(f.requested, ["200"]);
+  assert.deepEqual(windows, [["200", "100"]]);
+});
+
 test("an empty page mid-feed does not end the walk", async () => {
   const f = feed([page(["a"], "300", true), page([], "200", true), page(["b"], "100", false)]);
   assert.deepEqual(await collect(f.options), ["a", "b"]);

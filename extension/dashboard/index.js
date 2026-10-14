@@ -1,4 +1,5 @@
-import { walkFeed, FeedError } from "../lib/feed.js";
+import { walkFeed, parsePage, FeedError } from "../lib/feed.js";
+import { firstDownloadState, planWalks, retryCursors, nextCooldown, isCoolingDown } from "../lib/progress.js";
 import { buildRecord, isSaved, isValidId, RECORD_FORMAT } from "../lib/record.js";
 import { planItem, safeHandle, MEDIA_DIR } from "../lib/plan.js";
 import { withRetry } from "../lib/retry.js";
@@ -19,10 +20,20 @@ const stopBtn = el("stop");
 const runStatus = el("run-status");
 const runCounts = el("run-counts");
 const failuresList = el("failures");
+const archiveStatus = el("archive-status");
+const cooldownNote = el("cooldown-note");
 
 // Stop the run when this many downloads in a row are refused: TikTok is
 // blocking us, and carrying on would only make it worse.
 const MAX_REFUSALS_IN_A_ROW = 3;
+
+// Failed items are retried by fetching the page they were on; at most this
+// many such pages per run.
+const MAX_RETRY_PAGES = 5;
+
+// Errors that mean TikTok is pushing back. After one of these, Start stays
+// disabled for a while (see lib/progress.js).
+const PUSHBACK = new Set(["verification", "tiktok_error", "stuck", "rate_limited", "refused", "http", "downloads_refused"]);
 
 let session = null; // { tabId, account }
 let folder = null; // FileSystemDirectoryHandle with write access
@@ -37,15 +48,15 @@ const MESSAGES = {
   tab_not_ready: "The TikTok tab is still loading. Wait a moment, then press Check again.",
   tab_unreachable: "The TikTok tab could not be reached. Reload the TikTok tab, then try again.",
   network: "The connection to TikTok failed. Check your internet connection, then try again.",
-  http: "TikTok returned an error. Wait a few minutes, then try again.",
-  rate_limited: "TikTok says there were too many requests. Wait an hour, then try again.",
-  verification: "TikTok is asking for a verification. Open the TikTok tab, complete the puzzle it shows, then start again.",
-  refused: "TikTok did not answer the request. Open the TikTok tab and complete any verification it shows, then try again later.",
-  tiktok_error: "TikTok reported an error. Wait a few minutes, then try again.",
+  http: "TikTok returned an error.",
+  rate_limited: "TikTok says there were too many requests.",
+  verification: "TikTok is asking for a verification. Open the TikTok tab and complete the puzzle it shows.",
+  refused: "TikTok did not answer the request. If the TikTok tab shows a verification, complete it.",
+  tiktok_error: "TikTok reported an error.",
   unexpected_shape: "TikTok's response was not in the expected format. TikTok may have changed, and this extension needs an update.",
-  stuck: "TikTok kept returning the same page. Wait a few minutes, then try again.",
+  stuck: "TikTok kept returning the same page.",
   account_changed: "The open TikTok tab is logged in to a different account than when this run started. Log back in to the original account, then start again.",
-  downloads_refused: "TikTok refused several downloads in a row. Wait an hour, then start again."
+  downloads_refused: "TikTok refused several downloads in a row."
 };
 
 // Why a single item could not be saved.
@@ -68,15 +79,69 @@ class RunStopped extends Error {
   }
 }
 
+const isKnownError = (err) => err instanceof TikTokError || err instanceof FeedError || err instanceof RunStopped;
+const isPushback = (err) => isKnownError(err) && PUSHBACK.has(err.code);
+
 function describe(err) {
-  if (err instanceof TikTokError || err instanceof FeedError || err instanceof RunStopped) {
+  if (isKnownError(err)) {
     return `${MESSAGES[err.code] ?? "Something went wrong."} (${err.message})`;
   }
   return `Something went wrong: ${err.message}`;
 }
 
+function readCooldown() {
+  try {
+    return JSON.parse(localStorage.getItem("cooldown"));
+  } catch {
+    return null;
+  }
+}
+
+function startCooldown() {
+  const cooldown = nextCooldown(readCooldown(), Date.now());
+  try {
+    localStorage.setItem("cooldown", JSON.stringify(cooldown));
+  } catch {
+    // Without storage the cooldown only lasts while this page is open.
+  }
+  return cooldown;
+}
+
+const timeOf = (ms) => new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+let cooldownTimer = null;
+
 function refreshStart() {
-  startBtn.disabled = running || !session || !folder;
+  const cooldown = readCooldown();
+  const cooling = isCoolingDown(cooldown, Date.now());
+  startBtn.disabled = running || !session || !folder || cooling;
+  cooldownNote.hidden = !cooling || running;
+  clearTimeout(cooldownTimer);
+  if (cooling) {
+    cooldownNote.textContent = `TikTok asked us to slow down. You can continue after ${timeOf(cooldown.until)}.`;
+    cooldownTimer = setTimeout(refreshStart, cooldown.until - Date.now() + 1000);
+  }
+}
+
+function describeArchive(archive) {
+  const state = firstDownloadState(archive);
+  if (state.complete) {
+    const date = new Date(state.completedAt ?? Date.now()).toLocaleDateString();
+    return `All your likes are saved (first download finished on ${date}). Start fetches anything you have liked since your last run.`;
+  }
+  if (state.nextCursor) {
+    return "The first download of your likes is not finished. Start checks for new likes, then continues from where it stopped.";
+  }
+  return "Nothing has been downloaded yet. Start begins the first download of all your likes.";
+}
+
+async function showArchiveState() {
+  if (!folder) return;
+  try {
+    archiveStatus.textContent = describeArchive(await readJson(folder, "archive.json"));
+  } catch (err) {
+    archiveStatus.textContent = `The archive in this folder could not be read: ${err.message}`;
+  }
 }
 
 async function checkAccount() {
@@ -103,6 +168,7 @@ function useFolder(handle) {
   pickFolderBtn.textContent = "Choose a different folder";
   regainFolderBtn.hidden = true;
   refreshStart();
+  showArchiveState();
 }
 
 async function restoreFolder() {
@@ -167,7 +233,9 @@ function wait(ms, signal) {
 }
 
 // Temporary feed problems are retried a few times before the run gives up.
+// An unexplained TikTok error code is retried once, as myfaveTT does.
 function retryDelay(err, attempt) {
+  if (err instanceof FeedError) return err.code === "tiktok_error" && attempt === 1 ? 30_000 : null;
   if (!(err instanceof TikTokError)) return null;
   if (err.code === "rate_limited") return 60_000;
   if (err.code === "network" || (err.code === "http" && err.detail.startsWith("5"))) return 7_000 * attempt;
@@ -226,14 +294,22 @@ async function run() {
     runStatus.textContent = "Connecting to TikTok…";
     session = await connect();
     await allowVideoDownloads();
-    const archive = await prepareArchive(session.account, now);
+    let archive = await prepareArchive(session.account, now);
+    const saveArchive = async (changes) => {
+      archive = { ...archive, ...changes };
+      await writeJson(folder, "archive.json", archive);
+    };
+
     const itemsDir = await folder.getDirectoryHandle("items", { create: true });
     const mediaDir = await folder.getDirectoryHandle(MEDIA_DIR, { create: true });
 
-    // One listing of the media folder up front, kept current as files are added.
+    // Directory listings up front, kept current as the run adds to them.
     const knownFiles = new Set();
     for await (const name of mediaDir.keys()) knownFiles.add(name);
     const fileExists = (path) => knownFiles.has(path.slice(MEDIA_DIR.length + 1));
+    const knownIds = new Set();
+    for await (const name of itemsDir.keys()) if (name.endsWith(".json")) knownIds.add(name.slice(0, -5));
+    const seenThisRun = new Set();
 
     // If the TikTok tab is closed or reloaded mid-run, carry on through any
     // other open TikTok tab, as long as it is logged in to the same account.
@@ -249,24 +325,36 @@ async function run() {
       }
     };
 
-    const pages = walkFeed({
-      fetchPage: (cursor) =>
-        withRetry(() => fetchPageAnyTab(cursor), {
-          delayFor: retryDelay,
-          wait: (ms) => wait(ms, signal)
-        }),
-      pause: () => wait(5000 + Math.random() * 4000, signal)
-    });
+    // Validating inside the retry lets a one-off TikTok error be retried.
+    const fetchPage = (cursor) =>
+      withRetry(
+        async () => {
+          const body = await fetchPageAnyTab(cursor);
+          parsePage(body);
+          return body;
+        },
+        { delayFor: retryDelay, wait: (ms) => wait(ms, signal) }
+      );
+    const pause = () => wait(5000 + Math.random() * 4000, signal);
+    const walkFrom = (startCursor) => walkFeed({ fetchPage, pause, startCursor });
 
     let refusalsInARow = 0;
 
-    for await (const page of pages) {
+    // Saves what is missing from one page. Returns how many of its items no
+    // earlier run had seen.
+    const processPage = async (page) => {
+      let fresh = 0;
       for (const item of page.items) {
         signal.throwIfAborted();
         counts.seen++;
         if (!isValidId(item?.id)) {
           counts.invalid++;
           continue;
+        }
+        seenThisRun.add(item.id);
+        if (!knownIds.has(item.id)) {
+          fresh++;
+          knownIds.add(item.id);
         }
 
         const name = `${item.id}.json`;
@@ -284,12 +372,20 @@ async function run() {
         record.media = await saveItem(item, mediaDir, knownFiles, signal);
         await writeJson(itemsDir, name, record);
 
+        // archive.json lists failed items and the page each was found on.
+        const failures = { ...archive.failures };
         if (record.media.status === "saved") {
           counts.saved++;
           refusalsInARow = 0;
+          if (item.id in failures) {
+            delete failures[item.id];
+            await saveArchive({ failures });
+          }
         } else {
           counts.failed++;
           reportFailure(item, record.media);
+          failures[item.id] = record.feedWindow.newerCursor;
+          await saveArchive({ failures });
           if (record.media.reason === "http" && ++refusalsInARow >= MAX_REFUSALS_IN_A_ROW) {
             throw new RunStopped("downloads_refused");
           }
@@ -297,12 +393,48 @@ async function run() {
         renderCounts(counts);
         await wait(1000 + Math.random() * 1500, signal);
       }
-      runStatus.textContent = "Reading your likes…";
       renderCounts(counts);
+      return fresh;
+    };
+
+    const completeFirstDownload = () =>
+      saveArchive({ firstDownload: { complete: true, nextCursor: null, completedAt: now } });
+
+    for (const walk of planWalks(firstDownloadState(archive))) {
+      if (walk.kind === "updates") {
+        runStatus.textContent = "Checking for new likes…";
+        let reachedEnd = true;
+        for await (const page of walkFrom(walk.from)) {
+          if ((await processPage(page)) === 0) {
+            reachedEnd = false;
+            break;
+          }
+        }
+        // Walking all the way down covers whatever the first download missed.
+        if (reachedEnd) {
+          if (!firstDownloadState(archive).complete) await completeFirstDownload();
+          break;
+        }
+      } else {
+        runStatus.textContent = "Downloading all your likes…";
+        for await (const page of walkFrom(walk.from)) {
+          await processPage(page);
+          await saveArchive({ firstDownload: { complete: false, nextCursor: page.olderCursor } });
+          runStatus.textContent = "Downloading all your likes…";
+        }
+        await completeFirstDownload();
+      }
     }
 
-    await writeJson(folder, "archive.json", { ...archive, lastCompleteScanAt: now });
-    runStatus.textContent = counts.failed
+    // Retry earlier failures this run did not pass by.
+    for (const cursor of retryCursors(archive.failures, seenThisRun, MAX_RETRY_PAGES)) {
+      runStatus.textContent = "Retrying items that failed before…";
+      await pause();
+      const page = parsePage(await fetchPage(cursor));
+      await processPage({ items: page.items, newerCursor: cursor, olderCursor: page.cursor });
+    }
+
+    runStatus.textContent = Object.keys(archive.failures ?? {}).length
       ? "Finished, but some items could not be saved. Start again later to retry them."
       : "Done. Everything you have liked is saved in the folder.";
   } catch (err) {
@@ -310,7 +442,8 @@ async function run() {
       runStatus.textContent = "Stopped. Everything saved so far is kept; start again any time.";
     } else {
       runStatus.className = "error";
-      runStatus.textContent = `${describe(err)} Everything saved so far is kept.`;
+      const until = isPushback(err) ? ` You can continue after ${timeOf(startCooldown().until)}.` : "";
+      runStatus.textContent = `${describe(err)} Everything saved so far is kept.${until}`;
     }
   } finally {
     renderCounts(counts);
@@ -319,6 +452,7 @@ async function run() {
     startBtn.hidden = false;
     stopBtn.hidden = true;
     refreshStart();
+    showArchiveState();
   }
 }
 

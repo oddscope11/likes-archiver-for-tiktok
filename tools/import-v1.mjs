@@ -1,5 +1,10 @@
-// Moves videos saved by v1 of this extension into a new archive, where they
-// are provably the same file the new version would download.
+// Moves videos saved by v1 of this extension into a new archive.
+//
+// 1. Items in the new archive's records: a v1 file is taken only when it is
+//    provably the file the new version would download (see below).
+// 2. Items v1 saved that the likes feed no longer lists (deleted, made
+//    private or unliked): the file is taken and a record is built from v1's
+//    likes.db and .saved_from_doom.json, with `raw: null`.
 //
 //   node tools/import-v1.mjs <v1 folder> <new archive folder>          (dry run)
 //   node tools/import-v1.mjs <v1 folder> <new archive folder> --apply
@@ -12,7 +17,9 @@
 import { readdirSync, readFileSync, renameSync, statSync, writeFileSync, existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
-import { planItem, MEDIA_DIR } from "../extension/lib/plan.js";
+import { DatabaseSync } from "node:sqlite";
+import { planItem, safeHandle, MEDIA_DIR } from "../extension/lib/plan.js";
+import { RECORD_FORMAT } from "../extension/lib/record.js";
 
 const [oldRoot, newRoot, flag] = process.argv.slice(2);
 if (!oldRoot || !newRoot || (flag && flag !== "--apply")) {
@@ -96,9 +103,65 @@ for (const file of readdirSync(newItems)) {
   writeFileSync(recordPath, JSON.stringify(record, null, 2));
 }
 
-if (apply) {
-  writeFileSync(join(newRoot, "import-v1.log.json"), JSON.stringify({ at: new Date().toISOString(), ...outcome }, null, 2));
+// --- Part 2: items the feed no longer lists.
+
+const known = new Set(readdirSync(newItems).map((file) => file.replace(/\.json$/, "")));
+const db = new DatabaseSync(join(oldRoot, "likes.db"), { readOnly: true });
+const doomPath = join(oldMedia, ".saved_from_doom.json");
+const doom = new Map(existsSync(doomPath) ? JSON.parse(readFileSync(doomPath, "utf8")).map((entry) => [entry.id, entry]) : []);
+const iso = (seconds) => new Date(Number(seconds) * 1000).toISOString();
+
+for (const row of db.prepare("SELECT * FROM videos").all()) {
+  if (known.has(row.id)) continue;
+  const source = join(oldMedia, row.filename);
+  if (!/^\d{1,32}$/.test(row.id) || !existsSync(source)) {
+    skip("unlisted, file missing", row.id);
+    continue;
+  }
+
+  const { video, hasAudio } = probe(source);
+  const name = `${safeHandle(row.author_handle)}_${row.id}.mp4`;
+  const target = join(newMedia, name);
+  if (existsSync(target)) {
+    skip("target file already exists", row.id);
+    continue;
+  }
+
+  outcome.moved.push({ id: row.id, from: source, to: target, unlisted: true });
+  if (!apply) continue;
+
+  const bytes = statSync(source).size;
+  renameSync(source, target);
+  const record = {
+    format: RECORD_FORMAT,
+    id: row.id,
+    kind: "video",
+    firstSeenAt: iso(row.saved_at),
+    seenAt: [iso(row.saved_at)],
+    feedWindow: null,
+    media: {
+      status: "saved",
+      savedAt: new Date().toISOString(),
+      files: [
+        {
+          role: "video",
+          file: `${MEDIA_DIR}/${name}`,
+          bytes,
+          probed: { codec: video?.codec_name ?? null, width: video?.width ?? null, height: video?.height ?? null, hasAudio }
+        }
+      ],
+      notes: ["imported_from_v1"]
+    },
+    raw: null,
+    legacy: { source: "v1", likesDb: { ...row }, savedFromDoom: doom.get(row.id) ?? null }
+  };
+  writeFileSync(join(newItems, `${row.id}.json`), JSON.stringify(record, null, 2));
 }
 
-console.log(`${apply ? "Moved" : "Would move"} ${outcome.moved.length} files.`);
+if (apply) {
+  writeFileSync(join(newRoot, `import-v1.${Date.now()}.log.json`), JSON.stringify({ at: new Date().toISOString(), ...outcome }, null, 2));
+}
+
+const unlisted = outcome.moved.filter((m) => m.unlisted).length;
+console.log(`${apply ? "Moved" : "Would move"} ${outcome.moved.length} files (${unlisted} of items the feed no longer lists).`);
 for (const [reason, ids] of Object.entries(outcome.skipped)) console.log(`Left alone, ${reason}: ${ids.length}`);

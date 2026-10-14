@@ -76,16 +76,16 @@ Still to do:
 
 - Compare our feed request with the one TikTok's own page sends when the Likes
   tab is opened, and match its parameters.
-- Decide whether a routine run should stop walking the feed once it reaches
-  items that are already saved. That would cut requests sharply, but such a
-  run would no longer confirm which older items are still online.
+- Routine runs now stop at the first page with nothing new, so `seenAt` is no
+  longer refreshed for older likes. An occasional full check could restore
+  that if tracking vanished items becomes a priority.
 - Find out whether the Origin/Referer rule for video downloads is needed.
 
 ## Archive folder format
 
 ```text
 <archive>/
-  archive.json      { format, createdAt, account, lastCompleteScanAt }
+  archive.json      { format, createdAt, account, firstDownload, failures }
   items/<id>.json   One record per liked item
   Likes/            The media files
     <handle>_<id>.mp4                 a video
@@ -93,6 +93,28 @@ Still to do:
     <handle>_<id>_audio.mp3           a photo post's audio (.mp3 or .m4a)
 ```
 
+
+`firstDownload` is `{ complete, nextCursor, completedAt }`. Until the first
+download has walked the whole feed, `nextCursor` is the page it continues
+from. `failures` maps each item that could not be saved to the cursor of the
+page it was found on, so it can be retried with a single request.
+
+How a run decides what to fetch:
+
+- **First download not started:** walk the whole feed from the newest like,
+  saving the position after every page.
+- **First download interrupted:** walk from the newest like until a page holds
+  nothing new, then continue the first download from `nextCursor`.
+- **First download complete:** walk from the newest like until a page holds
+  nothing new.
+- **Then:** retry up to five pages holding earlier failures.
+
+After TikTok pushes back (an error, a refusal or a verification), Start is
+disabled for an hour, doubling with each further pushback that day, up to
+eight hours.
+
+Items brought in by `tools/import-v1.mjs` that the feed no longer lists have
+`raw: null` and a `legacy` field holding what v1 knew about them.
 
 Each item record holds:
 

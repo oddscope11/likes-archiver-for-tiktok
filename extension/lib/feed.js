@@ -42,11 +42,12 @@ export function parsePage(body) {
   return { items, cursor: String(cursor), hasMore: body.hasMore };
 }
 
-// Yields every page until TikTok says there are no more. Short and empty pages
-// are normal mid-feed, so only `hasMore: false` ends the walk. The generator
-// returning (rather than throwing) means the whole feed was seen.
-export async function* walkFeed({ fetchPage, pause, maxEmptyPages = 5 }) {
-  let cursor = "0";
+// Yields every page from `startCursor` until TikTok says there are no more.
+// Short and empty pages are normal mid-feed, so only `hasMore: false` ends the
+// walk. The generator returning (rather than throwing) means the rest of the
+// feed was seen.
+export async function* walkFeed({ fetchPage, pause, startCursor = "0", maxEmptyPages = 5 }) {
+  let cursor = startCursor;
   let emptyPages = 0;
 
   for (let index = 0; ; index++) {
