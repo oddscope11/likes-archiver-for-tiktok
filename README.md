@@ -131,16 +131,25 @@ Each item record holds:
 ## Layout
 
 ```text
-extension/          The unpacked extension (load this folder)
+extension/            The unpacked extension (load this folder)
   manifest.json
-  background.js     Service worker: opens the dashboard
-  dashboard/        The extension's UI page
-  lib/              Pure logic with no browser APIs, covered by tests
-test/               Node tests (`npm test`)
-  fixtures/         Sanitized API responses; `raw/` is git-ignored
-references/         Background material, not shipped
+  background.js       Service worker: opens the dashboard
+  dashboard/          The extension's page: UI and run logic (index.js),
+                      TikTok tab access (tiktok.js), folder access (folder.js),
+                      streaming downloads (download.js)
+  lib/                Pure logic, covered by tests: feed walking, records,
+                      stream selection, download plans, file sniffing,
+                      run planning and cooldowns, retries
+test/                 Node tests (`npm test`)
+  fixtures/           Sanitized real API items; `raw/` is git-ignored
+tools/
+  smoke-test.mjs      Loads the extension in headless Chromium, checks the
+                      dashboard opens (no TikTok requests)
+  import-v1.mjs       One-off migration of a v1 archive (done for the
+                      author's archive on 2026-10-14)
+references/           Background material, not shipped
   EXTRACTION_GUIDE.md
-  v1/               The first version of this extension
+  v1/                 The first version of this extension
   myfavett/, yt-dlp/  Third-party code, git-ignored
 ```
 
@@ -150,3 +159,30 @@ references/         Background material, not shipped
 - Test: `npm test` (Node's built-in runner, no dependencies)
 
 There is no build step: the extension is plain ES modules.
+
+## Status (2026-10-14)
+
+Working end to end on the author's account: the first download, resuming,
+update runs that stop at the first page with nothing new, failure retries,
+photo posts (with and without audio) and the v1 migration. The author's
+archive is `~/Videos/tiktok4` (780 items, all saved); the v1 archive has been
+deleted.
+
+Not yet seen working live: the verification/captcha handling, the cooldown,
+switching to another TikTok tab when the one in use closes, and a failure
+being retried through its page.
+
+Next steps, in order:
+
+1. Lower the captcha risk: match the feed request's parameters to what
+   TikTok's own Likes page sends (observe the browser's network log; do not
+   probe), and find out whether the Origin/Referer rule is needed.
+2. The gallery: a separate page that reads the archive folder. Records with
+   `raw: null` (imported from v1) carry their details in `legacy` instead.
+3. Prepare for a non-technical user: a more polished dashboard, setup help,
+   and eventually a Chrome Web Store listing.
+
+Compare against v1 and myfaveTT at the end of each milestone. Currently ahead
+on quality choice, photo posts, honest failure reporting, crash safety,
+permissions and request volume; behind on having a viewer.
+
