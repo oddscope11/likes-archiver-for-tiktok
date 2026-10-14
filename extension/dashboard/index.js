@@ -32,7 +32,7 @@ let stopper = null; // AbortController of the current run
 
 // What to tell the user for each failure, and what they can do about it.
 const MESSAGES = {
-  no_tab: "TikTok is not open. Open TikTok, log in, then come back here.",
+  no_tab: "TikTok is not open. Open TikTok in a tab and keep it open while saving, then come back here.",
   logged_out: "You are not logged in to TikTok. Log in on the TikTok tab, then press Check again.",
   tab_not_ready: "The TikTok tab is still loading. Wait a moment, then press Check again.",
   tab_unreachable: "The TikTok tab could not be reached. Reload the TikTok tab, then try again.",
@@ -44,6 +44,7 @@ const MESSAGES = {
   tiktok_error: "TikTok reported an error. Wait a few minutes, then try again.",
   unexpected_shape: "TikTok's response was not in the expected format. TikTok may have changed, and this extension needs an update.",
   stuck: "TikTok kept returning the same page. Wait a few minutes, then try again.",
+  account_changed: "The open TikTok tab is logged in to a different account than when this run started. Log back in to the original account, then start again.",
   downloads_refused: "TikTok refused several downloads in a row. Wait an hour, then start again."
 };
 
@@ -234,9 +235,23 @@ async function run() {
     for await (const name of mediaDir.keys()) knownFiles.add(name);
     const fileExists = (path) => knownFiles.has(path.slice(MEDIA_DIR.length + 1));
 
+    // If the TikTok tab is closed or reloaded mid-run, carry on through any
+    // other open TikTok tab, as long as it is logged in to the same account.
+    const fetchPageAnyTab = async (cursor) => {
+      try {
+        return await fetchLikesPage(session.tabId, session.account.secUid, cursor);
+      } catch (err) {
+        if (!(err instanceof TikTokError && err.code === "tab_unreachable")) throw err;
+        const next = await connect();
+        if (next.account.id !== session.account.id) throw new RunStopped("account_changed");
+        session = next;
+        return fetchLikesPage(session.tabId, session.account.secUid, cursor);
+      }
+    };
+
     const pages = walkFeed({
       fetchPage: (cursor) =>
-        withRetry(() => fetchLikesPage(session.tabId, session.account.secUid, cursor), {
+        withRetry(() => fetchPageAnyTab(cursor), {
           delayFor: retryDelay,
           wait: (ms) => wait(ms, signal)
         }),
