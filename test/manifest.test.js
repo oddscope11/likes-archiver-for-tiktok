@@ -15,5 +15,5 @@ test("manifest references files that exist", () => {
 
 test("manifest requests only what the extension uses", () => {
   assert.deepEqual(manifest.permissions, ["scripting", "declarativeNetRequestWithHostAccess"]);
-  assert.deepEqual(manifest.host_permissions, ["https://*.tiktok.com/*"]);
+  assert.deepEqual(manifest.host_permissions, ["https://*.tiktok.com/*", "https://*.tiktokcdn.com/*"]);
 });

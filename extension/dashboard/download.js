@@ -38,8 +38,8 @@ export async function allowVideoDownloads() {
   });
 }
 
-// TikTok's own video hosts need the session cookies. Its CDN hosts are public
-// and reject credentialed cross-origin requests.
+// TikTok's own video hosts need the session cookies. Its CDN hosts are public;
+// the extension has host access to both, so neither is subject to CORS.
 const credentialsFor = (url) => (new URL(url).hostname.endsWith(".tiktok.com") ? "include" : "omit");
 
 async function removeQuietly(dir, name) {
