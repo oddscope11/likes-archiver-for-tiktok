@@ -62,6 +62,12 @@ What happened that day, most likely first:
 5. A dozen refused requests to TikTok's video servers from the same IP address
    (`curl` and a logged-out headless browser).
 
+On 2026-10-14 three more captchas appeared, again only on the tab being used
+by hand; no run was interrupted by one. That day's runs were two long
+walks with the old code (the second read 568 items before TikTok answered
+with error 100001), then two short runs with the resumable walk. Planned next: a day of normal TikTok use
+with no extension runs, to see whether captchas appear anyway.
+
 Rules that follow from it:
 
 - **Never probe TikTok outside the extension.** No `curl`, no headless browser,
