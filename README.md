@@ -69,8 +69,9 @@ Rules that follow from it:
   tested against a local server; TikTok is only contacted by real runs.
 - **Pages of the likes feed are 5 to 9 seconds apart**, and downloads 1 to 2.5
   seconds apart.
-- **A verification or refusal ends the run** with instructions for the user.
-  The extension never retries past one.
+- **A verification or refusal ends the run** with instructions for the user
+  and a suggested time to wait. The extension never retries past one, but the
+  user may start again whenever they choose.
 
 Still to do:
 
@@ -109,9 +110,10 @@ How a run decides what to fetch:
   nothing new.
 - **Then:** retry up to five pages holding earlier failures.
 
-After TikTok pushes back (an error, a refusal or a verification), Start is
-disabled for an hour, doubling with each further pushback that day, up to
-eight hours.
+After TikTok pushes back (an error, a refusal or a verification), the
+dashboard suggests waiting an hour, doubling with each further pushback that
+day, up to eight hours. It is advice only: Start is never disabled, because
+the user decides when to try again.
 
 Items brought in by `tools/import-v1.mjs` that the feed no longer lists have
 `raw: null` and a `legacy` field holding what v1 knew about them.
@@ -139,7 +141,7 @@ extension/            The unpacked extension (load this folder)
                       streaming downloads (download.js)
   lib/                Pure logic, covered by tests: feed walking, records,
                       stream selection, download plans, file sniffing,
-                      run planning and cooldowns, retries
+                      run planning and suggested waits, retries
 test/                 Node tests (`npm test`)
   fixtures/           Sanitized real API items; `raw/` is git-ignored
 tools/
@@ -168,9 +170,9 @@ photo posts (with and without audio) and the v1 migration. The author's
 archive is `~/Videos/tiktok4` (780 items, all saved); the v1 archive has been
 deleted.
 
-Not yet seen working live: the verification/captcha handling, the cooldown,
-switching to another TikTok tab when the one in use closes, and a failure
-being retried through its page.
+Not yet seen working live: the verification/captcha handling, the suggested
+wait, switching to another TikTok tab when the one in use closes, and a
+failure being retried through its page.
 
 Next steps, in order:
 

@@ -1,5 +1,5 @@
-// Decides which parts of the likes feed a run visits, and how long to back
-// off after TikTok pushes back. Pure logic; the state lives in archive.json.
+// Decides which parts of the likes feed a run visits, and how long to suggest
+// waiting after TikTok pushes back. Pure logic; the state lives in archive.json.
 
 // The first download walks the whole feed once, oldest likes last. Its
 // position is saved after every page so an interrupted walk can continue.
@@ -34,7 +34,7 @@ export function retryCursors(failures, seenThisRun, limit) {
 
 const HOUR = 60 * 60 * 1000;
 
-// After TikTok pushes back, wait an hour, doubling with each further pushback
+// After TikTok pushes back, suggest waiting an hour, doubling with each further pushback
 // on the same day, up to eight hours. `now` is in milliseconds.
 export function nextCooldown(previous, now) {
   const day = new Date(now).toDateString();

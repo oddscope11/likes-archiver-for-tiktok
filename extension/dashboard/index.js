@@ -31,8 +31,9 @@ const MAX_REFUSALS_IN_A_ROW = 3;
 // many such pages per run.
 const MAX_RETRY_PAGES = 5;
 
-// Errors that mean TikTok is pushing back. After one of these, Start stays
-// disabled for a while (see lib/progress.js).
+// Errors that mean TikTok is pushing back. After one of these the dashboard
+// suggests a time to wait until (see lib/progress.js); it never stops the
+// user from starting again sooner.
 const PUSHBACK = new Set(["verification", "tiktok_error", "stuck", "rate_limited", "refused", "http", "downloads_refused"]);
 
 let session = null; // { tabId, account }
@@ -102,7 +103,7 @@ function startCooldown() {
   try {
     localStorage.setItem("cooldown", JSON.stringify(cooldown));
   } catch {
-    // Without storage the cooldown only lasts while this page is open.
+    // Without storage the suggestion only lasts while this page is open.
   }
   return cooldown;
 }
@@ -114,11 +115,11 @@ let cooldownTimer = null;
 function refreshStart() {
   const cooldown = readCooldown();
   const cooling = isCoolingDown(cooldown, Date.now());
-  startBtn.disabled = running || !session || !folder || cooling;
+  startBtn.disabled = running || !session || !folder;
   cooldownNote.hidden = !cooling || running;
   clearTimeout(cooldownTimer);
   if (cooling) {
-    cooldownNote.textContent = `TikTok asked us to slow down. You can continue after ${timeOf(cooldown.until)}.`;
+    cooldownNote.textContent = `TikTok pushed back on the last run. It is a good idea to wait until ${timeOf(cooldown.until)} before starting again; starting sooner makes a verification puzzle more likely.`;
     cooldownTimer = setTimeout(refreshStart, cooldown.until - Date.now() + 1000);
   }
 }
@@ -442,7 +443,7 @@ async function run() {
       runStatus.textContent = "Stopped. Everything saved so far is kept; start again any time.";
     } else {
       runStatus.className = "error";
-      const until = isPushback(err) ? ` You can continue after ${timeOf(startCooldown().until)}.` : "";
+      const until = isPushback(err) ? ` It is a good idea to wait until ${timeOf(startCooldown().until)} before starting again.` : "";
       runStatus.textContent = `${describe(err)} Everything saved so far is kept.${until}`;
     }
   } finally {
