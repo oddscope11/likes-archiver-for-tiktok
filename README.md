@@ -81,8 +81,11 @@ Rules that follow from it:
 
 Still to do:
 
-- Compare our feed request with the one TikTok's own page sends when the Likes
-  tab is opened, and match its parameters.
+- The feed request now carries the same parameters as the one TikTok's own
+  Likes tab sends (observed 2026-10-14), including `count=16`, except
+  `video_encoding=dash` (see Decisions). Not yet confirmed: that TikTok's page
+  adds its signature (msToken, X-Bogus, X-Gnarly) to our requests too. Check by
+  reading the TikTok tab's network log during a run.
 - Routine runs now stop at the first page with nothing new, so `seenAt` is no
   longer refreshed for older likes. An occasional full check could restore
   that if tracking vanished items becomes a priority.
@@ -182,9 +185,9 @@ failure being retried through its page.
 
 Next steps, in order:
 
-1. Lower the captcha risk: match the feed request's parameters to what
-   TikTok's own Likes page sends (observe the browser's network log; do not
-   probe), and find out whether the Origin/Referer rule is needed.
+1. Lower the captcha risk: confirm our feed requests are signed like the
+   page's own, decide on `video_encoding=dash`, and find out whether the
+   Origin/Referer rule is needed.
 2. The gallery: a separate page that reads the archive folder. Records with
    `raw: null` (imported from v1) carry their details in `legacy` instead.
 3. Prepare for a non-technical user: a more polished dashboard, setup help,

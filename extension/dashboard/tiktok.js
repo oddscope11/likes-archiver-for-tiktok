@@ -31,16 +31,72 @@ function pageReadAccount() {
   }
 }
 
+// Builds the request the way TikTok's own Likes tab does, with the same
+// parameters taken from the page's state (observed 2026-10-14; myfaveTT does
+// the same). TikTok's page adds its signature (msToken, X-Bogus, X-Gnarly) to
+// requests made through its fetch.
 async function pageFetchLikes(secUid, cursor) {
-  const params = new URLSearchParams({
+  let scope = {};
+  try {
+    scope = JSON.parse(document.getElementById("__UNIVERSAL_DATA_FOR_REHYDRATION__").textContent).__DEFAULT_SCOPE__ ?? {};
+  } catch {
+    // Fall back to the parameters that do not depend on page state.
+  }
+  const app = scope["webapp.app-context"] ?? {};
+  const seoTests = scope["seo.abtest"] ?? {};
+  const abVersions = [
+    ...(app.abTestVersion?.versionName?.split(",") ?? []),
+    ...Object.values(seoTests.parameters?.clientABVersions ?? {}),
+    ...(seoTests.vidList ?? [])
+  ].filter(Boolean);
+  const ua = navigator.userAgent;
+  const os = /Windows/.test(ua) ? "windows" : /Mac/.test(ua) ? "mac" : /Linux|X11/.test(ua) ? "linux" : "";
+
+  const values = {
+    WebIdLastTime: app.webIdCreatedTime,
     aid: "1988",
+    app_language: app.language,
     app_name: "tiktok_web",
-    device_platform: "web_pc",
-    secUid,
-    count: "30",
+    browser_language: navigator.language,
+    browser_name: navigator.appCodeName,
+    browser_online: navigator.onLine,
+    browser_platform: navigator.platform,
+    browser_version: navigator.appVersion,
+    channel: "tiktok_web",
+    clientABVersions: abVersions.join(","),
+    cookie_enabled: navigator.cookieEnabled,
+    count: "16",
+    coverFormat: "2",
     cursor,
-    coverFormat: "2"
-  });
+    data_collection_enabled: true,
+    device_id: app.wid,
+    device_platform: "web_pc",
+    focus_state: document.hasFocus(),
+    from_page: "user",
+    history_len: history.length,
+    is_fullscreen: matchMedia("(display-mode: fullscreen)").matches,
+    is_page_visible: document.visibilityState === "visible",
+    language: app.language,
+    needPinnedItemIds: true,
+    odinId: app.odinId,
+    os,
+    post_item_list_request_type: "0",
+    priority_region: app.user?.region,
+    referer: document.referrer,
+    region: app.region,
+    root_referer: document.referrer,
+    screen_height: screen.height,
+    screen_width: screen.width,
+    secUid,
+    tz_name: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    user_is_login: true,
+    verifyFp: document.cookie.match(/s_v_web_id=(\w+)/)?.[1],
+    webcast_language: app.language
+  };
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(values)) {
+    if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
+  }
   try {
     const res = await fetch("/api/favorite/item_list/?" + params, { credentials: "include" });
     return { status: res.status, text: await res.text() };
