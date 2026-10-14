@@ -17,6 +17,8 @@ export function classify(item) {
 // earlier run already knew about it.
 export function buildRecord(item, existing, { now, newerCursor, olderCursor }) {
   return {
+    // Fields this version does not manage, such as `legacy`, are kept.
+    ...existing,
     format: RECORD_FORMAT,
     id: item.id,
     kind: classify(item),

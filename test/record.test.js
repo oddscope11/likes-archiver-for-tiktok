@@ -60,3 +60,11 @@ test("an item is saved only if its record says so and every file is present", ()
   assert.ok(!isSaved({ media: null }, exists));
   assert.ok(!isSaved({ media: { status: "failed", reason: "http" } }, exists));
 });
+
+test("fields added by other tools survive a later sighting", () => {
+  const imported = { format: 1, id: "1", kind: "video", feedWindow: null, seenAt: ["2025-06-22T00:00:00.000Z"], media: null, raw: null, legacy: { source: "v1" } };
+  const record = buildRecord({ id: "1", video: { playAddr: "https://example.com/v" } }, imported, seen("2026-10-20T10:00:00.000Z"));
+  assert.deepEqual(record.legacy, { source: "v1" });
+  assert.deepEqual(record.feedWindow, { newerCursor: "200", olderCursor: "100" });
+  assert.equal(record.raw.id, "1");
+});
