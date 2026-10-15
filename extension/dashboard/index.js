@@ -3,7 +3,7 @@ import { firstDownloadState, planWalks, retryCursors, nextCooldown, isCoolingDow
 import { buildRecord, isSaved, isValidId, RECORD_FORMAT } from "../lib/record.js";
 import { planItem, safeHandle, MEDIA_DIR } from "../lib/plan.js";
 import { withRetry } from "../lib/retry.js";
-import { connect, fetchLikesPage, openTikTok, TikTokError } from "./tiktok.js";
+import { connect, fetchLikesPage, openTikTok, TikTokError, lastFeedRequest } from "./tiktok.js";
 import { pickFolder, rememberedFolder, regainAccess, readJson, writeJson } from "./folder.js";
 import { allowVideoDownloads, downloadPart, DownloadError } from "./download.js";
 
@@ -447,6 +447,15 @@ async function run() {
       runStatus.textContent = `${describe(err)} Everything saved so far is kept.${until}`;
     }
   } finally {
+    // Kept for diagnosis: whether TikTok's page signed our feed requests.
+    if (lastFeedRequest && folder) {
+      try {
+        const archive = await readJson(folder, "archive.json");
+        if (archive) await writeJson(folder, "archive.json", { ...archive, lastFeedRequest: { ...lastFeedRequest, at: now } });
+      } catch {
+        // Diagnostics are optional.
+      }
+    }
     renderCounts(counts);
     running = false;
     stopper = null;
