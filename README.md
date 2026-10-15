@@ -65,8 +65,10 @@ What happened that day, most likely first:
 On 2026-10-14 three more captchas appeared, again only on the tab being used
 by hand; no run was interrupted by one. That day's runs were two long
 walks with the old code (the second read 568 items before TikTok answered
-with error 100001), then two short runs with the resumable walk. Planned next: a day of normal TikTok use
-with no extension runs, to see whether captchas appear anyway.
+with error 100001), then two short runs with the resumable walk. On 2026-10-15, with no extension runs
+since the day before, a few minutes of normal use brought three captchas, each
+while opening a user profile. So captchas appear without the extension; they
+are more likely tied to the new browser and login, or to the account.
 
 Rules that follow from it:
 
