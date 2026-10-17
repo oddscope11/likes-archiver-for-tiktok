@@ -76,6 +76,12 @@ try {
     awaitPromise: true
   });
   const state = result.result.result.value;
+  // SCREENSHOT=path.png saves a picture of the dashboard.
+  if (process.env.SCREENSHOT) {
+    await send("Emulation.setDeviceMetricsOverride", { width: 1600, height: 900, deviceScaleFactor: 1, mobile: false });
+    const shot = await send("Page.captureScreenshot", { format: "png" });
+    (await import("node:fs")).writeFileSync(process.env.SCREENSHOT, Buffer.from(shot.result.data, "base64"));
+  }
   console.log(state);
 
   if (!state.version.startsWith("v")) problems.push("version not shown");

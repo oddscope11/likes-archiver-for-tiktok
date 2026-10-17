@@ -11,37 +11,52 @@
     <header>
       <h1>TikTok Likes Archiver</h1>
       <span id="version"></span>
+      <button id="open-gallery" hidden>Open gallery</button>
     </header>
 
     <section>
-      <h2>1. TikTok account</h2>
+      <h2>1 · TikTok account</h2>
       <p id="account-status">Checking…</p>
       <button id="open-tiktok" hidden>Open TikTok</button>
     </section>
 
     <section>
-      <h2>2. Archive folder</h2>
+      <h2>2 · Archive folder</h2>
       <p id="folder-status">No folder chosen yet.</p>
       <button id="pick-folder">Choose folder</button>
       <button id="regain-folder" hidden>Allow access to the folder</button>
     </section>
 
     <section>
-      <h2>3. Archive your likes</h2>
-      <p>Saves every video and photo post you have liked to the folder. You can stop at any time; the next start continues where it left off.</p>
-      <p id="archive-status"></p>
+      <h2>3 · Archive your likes</h2>
+      <p id="archive-status">Saves every video and photo post you have liked. You can stop at any time; the next start continues where it left off.</p>
       <p id="cooldown-note" hidden></p>
       <button id="start" disabled>Start</button>
       <button id="stop" hidden>Stop</button>
-      <p id="run-status" role="status"></p>
+    </section>
+
+    <section class="wide">
+      <h2>Run</h2>
+      <p id="run-status" role="status">Not running.</p>
       <p id="run-counts"></p>
-      <ul id="failures"></ul>
+    </section>
+
+    <section class="wide">
+      <h2>Latest likes <span id="latest-note"></span></h2>
+      <p id="latest-empty">Your newest likes appear here once there is an archive folder.</p>
+      <ul id="latest"></ul>
+    </section>
+
+    <section class="two">
+      <h2>Saved this session</h2>
+      <p id="saved-empty">Nothing yet.</p>
+      <table id="saved"></table>
     </section>
 
     <section>
-      <h2>4. Browse your likes</h2>
-      <p>Opens a page to watch and search everything saved. The same page is in the folder as <code>gallery.html</code>, which works without the extension.</p>
-      <button id="open-gallery" hidden>Open gallery</button>
+      <h2>Problems</h2>
+      <p id="failures-empty">None.</p>
+      <ul id="failures"></ul>
     </section>
   </main>
 

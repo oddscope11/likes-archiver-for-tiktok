@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { galleryEntry, galleryData, galleryScript, inlineGalleryPage } from "../extension/lib/gallery.js";
+import { galleryEntry, galleryData, galleryScript, parseGalleryScript, inlineGalleryPage } from "../extension/lib/gallery.js";
 
 const fromFeed = (id, olderCursor, extra = {}) => ({
   id,
@@ -80,4 +80,10 @@ test("the archive's copy of the page carries its script inline", () => {
   assert.equal(page, "<script src=\"gallery-data.js\"></script>\n<script>\nconst a = '$&';</script>");
   assert.throws(() => inlineGalleryPage("<html>", "x"));
   assert.throws(() => inlineGalleryPage('<script src="gallery.js"></script>', "'</script>'"));
+});
+
+test("the data file can be read back without running it", () => {
+  const data = { items: [{ id: "1", caption: "a;b" }] };
+  assert.deepEqual(parseGalleryScript(galleryScript(data)), data);
+  assert.throws(() => parseGalleryScript("alert(1)"));
 });

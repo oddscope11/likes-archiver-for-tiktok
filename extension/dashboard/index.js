@@ -7,6 +7,7 @@ import { connect, fetchLikesPage, openTikTok, TikTokError, lastFeedRequest } fro
 import { pickFolder, rememberedFolder, regainAccess, readJson, writeJson, writeText } from "./folder.js";
 import { galleryData, galleryScript, inlineGalleryPage, GALLERY_PAGE, GALLERY_DATA } from "../lib/gallery.js";
 import { allowVideoDownloads, downloadPart, DownloadError } from "./download.js";
+import { showLatest, addSaved } from "./latest.js";
 
 const el = (id) => document.getElementById(id);
 
@@ -23,6 +24,7 @@ const failuresList = el("failures");
 const archiveStatus = el("archive-status");
 const openGalleryBtn = el("open-gallery");
 const cooldownNote = el("cooldown-note");
+const failuresEmpty = el("failures-empty");
 
 // Stop the run when this many downloads in a row are refused: TikTok is
 // blocking us, and carrying on would only make it worse.
@@ -146,7 +148,7 @@ function describeArchive(archive) {
   const state = firstDownloadState(archive);
   if (state.complete) {
     const date = new Date(state.completedAt ?? Date.now()).toLocaleDateString();
-    return `All your likes are saved (first download finished on ${date}). Start fetches anything you have liked since your last run.`;
+    return `All your likes are saved (first download finished ${date}). Start fetches what you have liked since.`;
   }
   if (state.nextCursor) {
     return "The first download of your likes is not finished. Start checks for new likes, then continues from where it stopped.";
@@ -209,10 +211,11 @@ function useFolder(handle) {
   folder = handle;
   pendingFolder = null;
   folderStatus.textContent = `Saving to the folder “${handle.name}”.`;
-  pickFolderBtn.textContent = "Choose a different folder";
+  pickFolderBtn.textContent = "Change";
   regainFolderBtn.hidden = true;
   refreshStart();
   showArchiveState();
+  showLatest(handle);
 }
 
 async function restoreFolder() {
@@ -258,6 +261,7 @@ function reportFailure(item, media) {
   const details = [media.part, media.detail].filter(Boolean).join(": ");
   line.textContent = `@${safeHandle(item.author?.uniqueId)} (${item.id}): ${reason}${details ? ` (${details})` : ""}`;
   failuresList.append(line);
+  failuresEmpty.hidden = true;
 }
 
 // Resolves after `ms`, or rejects as soon as the run is stopped.
@@ -329,6 +333,7 @@ async function run() {
   runStatus.className = "";
   runCounts.textContent = "";
   failuresList.replaceChildren();
+  failuresEmpty.hidden = false;
   refreshStart();
 
   const counts = { seen: 0, saved: 0, alreadySaved: 0, failed: 0, invalid: 0 };
@@ -420,6 +425,7 @@ async function run() {
         const failures = { ...archive.failures };
         if (record.media.status === "saved") {
           counts.saved++;
+          addSaved(record, mediaDir).catch(() => {});
           refusalsInARow = 0;
           if (item.id in failures) {
             delete failures[item.id];

@@ -58,6 +58,15 @@ export function inlineGalleryPage(html, script) {
 }
 
 // The data file is plain JavaScript that sets one global.
+const SCRIPT_START = "window.GALLERY = ";
+
 export function galleryScript(data) {
-  return `window.GALLERY = ${JSON.stringify(data)};\n`;
+  return `${SCRIPT_START}${JSON.stringify(data)};\n`;
+}
+
+// Reads a data file back, without running it.
+export function parseGalleryScript(text) {
+  const body = text.trim();
+  if (!body.startsWith(SCRIPT_START) || !body.endsWith(";")) throw new Error("not a gallery data file");
+  return JSON.parse(body.slice(SCRIPT_START.length, -1));
 }
