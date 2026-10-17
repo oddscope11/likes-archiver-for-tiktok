@@ -45,10 +45,11 @@ This is a rewrite; the original version lives in `references/v1/`.
   files (a page opened from disk may not read `items/`). Thumbnails are each
   video's frame at 1 s, drawn locally; TikTok's cover links expire.
   `tools/build-gallery.mjs` rebuilds it without the extension.
-- **HEVC in the browser:** Chromium decodes HEVC only with hardware support,
-  and on the author's machine it cannot, so most videos play as sound only in
-  the gallery. The files are fine in a video player, and the gallery says so.
-  Preferring H.264 would trade quality for browser playback; not decided.
+- **HEVC in the browser:** Chromium decodes HEVC only with hardware support.
+  The author's Chromium plays it fine; headless Chromium on the same machine
+  cannot, so the headless tests see sound without picture. Where the browser
+  reports no HEVC support, the gallery says to use a video player. HEVC stays
+  preferred.
 - **Browser:** Chromium only.
 
 ## Staying on TikTok's good side
@@ -203,12 +204,10 @@ Next steps, in order:
 
 1. Notice media files that went missing from older items (routine runs only
    look at the newest page).
-2. Decide on HEVC versus browser playback (see Decisions).
-3. Publish: GitHub first (license, install steps, screenshots), maybe the
+2. Publish: GitHub first (license, install steps, screenshots), maybe the
    Chrome Web Store later (needs a privacy statement).
 
 Compare against v1 and myfaveTT at the end of each milestone. Currently ahead
 on quality choice, photo posts, honest failure reporting, crash safety,
-permissions and request volume; even on having a viewer, except that most of the author's videos are HEVC and
-play without picture in Chromium.
+permissions and request volume; even on having a viewer.
 
