@@ -49,6 +49,14 @@ export function galleryData(records, { account, generatedAt }) {
   return { generatedAt, account: account?.uniqueId ?? null, items };
 }
 
+// The archive's copy of the page carries its script inline, so the folder
+// holds just the page and its data.
+export function inlineGalleryPage(html, script) {
+  const tag = '<script src="gallery.js"></script>';
+  if (!html.includes(tag) || /<\/script/i.test(script)) throw new Error("unexpected gallery page template");
+  return html.replace(tag, () => `<script>\n${script}</script>`);
+}
+
 // The data file is plain JavaScript that sets one global.
 export function galleryScript(data) {
   return `window.GALLERY = ${JSON.stringify(data)};\n`;

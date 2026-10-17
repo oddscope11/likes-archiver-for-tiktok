@@ -5,7 +5,7 @@ import { planItem, safeHandle, MEDIA_DIR } from "../lib/plan.js";
 import { withRetry } from "../lib/retry.js";
 import { connect, fetchLikesPage, openTikTok, TikTokError, lastFeedRequest } from "./tiktok.js";
 import { pickFolder, rememberedFolder, regainAccess, readJson, writeJson, writeText } from "./folder.js";
-import { galleryData, galleryScript, GALLERY_PAGE, GALLERY_DATA } from "../lib/gallery.js";
+import { galleryData, galleryScript, inlineGalleryPage, GALLERY_PAGE, GALLERY_DATA } from "../lib/gallery.js";
 import { allowVideoDownloads, downloadPart, DownloadError } from "./download.js";
 
 const el = (id) => document.getElementById(id);
@@ -21,6 +21,7 @@ const runStatus = el("run-status");
 const runCounts = el("run-counts");
 const failuresList = el("failures");
 const archiveStatus = el("archive-status");
+const openGalleryBtn = el("open-gallery");
 const cooldownNote = el("cooldown-note");
 
 // Stop the run when this many downloads in a row are refused: TikTok is
@@ -135,7 +136,8 @@ async function writeGallery(dir) {
     if (handle.kind !== "file" || !name.endsWith(".json")) continue;
     records.push(JSON.parse(await (await handle.getFile()).text()));
   }
-  const page = await fetch(chrome.runtime.getURL(`gallery/${GALLERY_PAGE}`)).then((res) => res.text());
+  const source = (name) => fetch(chrome.runtime.getURL(`gallery/${name}`)).then((res) => res.text());
+  const page = inlineGalleryPage(await source(GALLERY_PAGE), await source("gallery.js"));
   await writeText(dir, GALLERY_DATA, galleryScript(galleryData(records, { account: archive.account, generatedAt: new Date().toISOString() })));
   await writeText(dir, GALLERY_PAGE, page);
 }
@@ -144,7 +146,7 @@ function describeArchive(archive) {
   const state = firstDownloadState(archive);
   if (state.complete) {
     const date = new Date(state.completedAt ?? Date.now()).toLocaleDateString();
-    return `All your likes are saved (first download finished on ${date}). Start fetches anything you have liked since your last run. To browse them, open ${GALLERY_PAGE} in the folder.`;
+    return `All your likes are saved (first download finished on ${date}). Start fetches anything you have liked since your last run.`;
   }
   if (state.nextCursor) {
     return "The first download of your likes is not finished. Start checks for new likes, then continues from where it stopped.";
@@ -155,7 +157,9 @@ function describeArchive(archive) {
 async function showArchiveState() {
   if (!folder) return;
   try {
-    archiveStatus.textContent = describeArchive(await readJson(folder, "archive.json"));
+    const archive = await readJson(folder, "archive.json");
+    archiveStatus.textContent = describeArchive(archive);
+    openGalleryBtn.hidden = !archive;
   } catch (err) {
     archiveStatus.textContent = `The archive in this folder could not be read: ${err.message}`;
   }
@@ -514,6 +518,7 @@ async function run() {
 }
 
 openTikTokBtn.addEventListener("click", openTikTok);
+openGalleryBtn.addEventListener("click", () => chrome.tabs.create({ url: chrome.runtime.getURL(`gallery/${GALLERY_PAGE}`) }));
 
 pickFolderBtn.addEventListener("click", async () => {
   try {

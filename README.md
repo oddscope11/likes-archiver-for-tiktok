@@ -44,7 +44,10 @@ This is a rewrite; the original version lives in `references/v1/`.
   with no extension installed, and reads only `gallery-data.js` and the media
   files (a page opened from disk may not read `items/`). Thumbnails are each
   video's frame at 1 s, drawn locally; TikTok's cover links expire.
-  `tools/build-gallery.mjs` rebuilds it without the extension.
+  `tools/build-gallery.mjs` rebuilds it without the extension. The dashboard's
+  Open gallery button opens the same page inside the extension, reading the
+  folder directly (the extension cannot open `file://` pages or learn the
+  folder's path).
 - **HEVC in the browser:** Chromium decodes HEVC only with hardware support.
   The author's Chromium plays it fine; headless Chromium on the same machine
   cannot, so the headless tests see sound without picture. Where the browser
@@ -160,7 +163,9 @@ Each item record holds:
 extension/            The unpacked extension (load this folder)
   manifest.json
   background.js       Service worker: opens the dashboard
-  gallery/            The gallery page copied into each archive
+  gallery/            The gallery page (gallery.html, gallery.js), copied
+                      into each archive with its script inlined; source.js
+                      feeds it from the folder when the extension opens it
   dashboard/          The extension's page: UI and run logic (index.js),
                       TikTok tab access (tiktok.js), folder access (folder.js),
                       streaming downloads (download.js)

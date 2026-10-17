@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { galleryEntry, galleryData, galleryScript } from "../extension/lib/gallery.js";
+import { galleryEntry, galleryData, galleryScript, inlineGalleryPage } from "../extension/lib/gallery.js";
 
 const fromFeed = (id, olderCursor, extra = {}) => ({
   id,
@@ -73,4 +73,11 @@ test("the data file is a script that sets one global", () => {
   const window = {};
   new Function("window", script)(window);
   assert.equal(window.GALLERY.items[0].caption, "</script><b>");
+});
+
+test("the archive's copy of the page carries its script inline", () => {
+  const page = inlineGalleryPage('<script src="gallery-data.js"></script>\n<script src="gallery.js"></script>', "const a = '$&';");
+  assert.equal(page, "<script src=\"gallery-data.js\"></script>\n<script>\nconst a = '$&';</script>");
+  assert.throws(() => inlineGalleryPage("<html>", "x"));
+  assert.throws(() => inlineGalleryPage('<script src="gallery.js"></script>', "'</script>'"));
 });

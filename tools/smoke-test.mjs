@@ -81,6 +81,23 @@ try {
   if (!state.version.startsWith("v")) problems.push("version not shown");
   if (!state.galleryPage) problems.push("gallery page not readable from the extension");
   if (!state.account.includes("TikTok is not open")) problems.push(`unexpected account status: ${state.account}`);
+  // The gallery opened by the extension, before any folder is chosen.
+  const gallery = await fetch(`http://127.0.0.1:${port}/json/new?chrome-extension://${id}/gallery/gallery.html`, { method: "PUT" }).then((r) => r.json());
+  await sleep(2000);
+  const galleryText = await new Promise((resolve) => {
+    const ws = new WebSocket(gallery.webSocketDebuggerUrl);
+    ws.onopen = () => ws.send(JSON.stringify({ id: 1, method: "Runtime.evaluate", params: { expression: 'document.getElementById("empty").textContent', returnByValue: true } }));
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      if (message.id === 1) {
+        ws.close();
+        resolve(message.result.result.value);
+      }
+    };
+  });
+  console.log({ gallery: galleryText });
+  if (!galleryText.includes("No archive folder")) problems.push(`unexpected gallery message: ${galleryText}`);
+
   if (problems.length) {
     failed = true;
     console.error("Problems:", problems);

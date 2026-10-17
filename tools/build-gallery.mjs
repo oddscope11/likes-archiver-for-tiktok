@@ -3,10 +3,10 @@
 //
 //   node tools/build-gallery.mjs <archive folder>
 
-import { readdirSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { galleryData, galleryScript, GALLERY_PAGE, GALLERY_DATA } from "../extension/lib/gallery.js";
+import { galleryData, galleryScript, inlineGalleryPage, GALLERY_PAGE, GALLERY_DATA } from "../extension/lib/gallery.js";
 
 const [root] = process.argv.slice(2);
 if (!root) {
@@ -22,5 +22,6 @@ const archive = JSON.parse(readFileSync(join(root, "archive.json"), "utf8"));
 
 const data = galleryData(records, { account: archive.account, generatedAt: new Date().toISOString() });
 writeFileSync(join(root, GALLERY_DATA), galleryScript(data));
-copyFileSync(fileURLToPath(new URL(`../extension/gallery/${GALLERY_PAGE}`, import.meta.url)), join(root, GALLERY_PAGE));
+const source = (name) => readFileSync(fileURLToPath(new URL(`../extension/gallery/${name}`, import.meta.url)), "utf8");
+writeFileSync(join(root, GALLERY_PAGE), inlineGalleryPage(source(GALLERY_PAGE), source("gallery.js")));
 console.log(`Wrote ${GALLERY_PAGE} and ${GALLERY_DATA} (${data.items.length} items).`);
