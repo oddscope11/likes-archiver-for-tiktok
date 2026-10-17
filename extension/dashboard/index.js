@@ -12,7 +12,6 @@ const el = (id) => document.getElementById(id);
 
 const accountStatus = el("account-status");
 const openTikTokBtn = el("open-tiktok");
-const checkAccountBtn = el("check-account");
 const folderStatus = el("folder-status");
 const pickFolderBtn = el("pick-folder");
 const regainFolderBtn = el("regain-folder");
@@ -45,9 +44,9 @@ let stopper = null; // AbortController of the current run
 
 // What to tell the user for each failure, and what they can do about it.
 const MESSAGES = {
-  no_tab: "TikTok is not open. Open TikTok in a tab and keep it open while saving, then come back here.",
-  logged_out: "You are not logged in to TikTok. Log in on the TikTok tab, then press Check again.",
-  tab_not_ready: "The TikTok tab is still loading. Wait a moment, then press Check again.",
+  no_tab: "TikTok is not open. Open TikTok in a tab and keep it open while saving.",
+  logged_out: "You are not logged in to TikTok. Log in on the TikTok tab.",
+  tab_not_ready: "The TikTok tab is still loading.",
   tab_unreachable: "The TikTok tab could not be reached. Reload the TikTok tab, then try again.",
   network: "The connection to TikTok failed. Check your internet connection, then try again.",
   http: "TikTok returned an error.",
@@ -163,21 +162,44 @@ async function showArchiveState() {
 }
 
 async function checkAccount() {
-  accountStatus.textContent = "Checking…";
-  openTikTokBtn.hidden = true;
-  checkAccountBtn.hidden = true;
   try {
     session = await connect();
     const { nickname, uniqueId } = session.account;
     accountStatus.textContent = `Connected as ${nickname ?? uniqueId} (@${uniqueId}).`;
+    openTikTokBtn.hidden = true;
   } catch (err) {
     session = null;
     accountStatus.textContent = describe(err);
-    openTikTokBtn.hidden = false;
-    checkAccountBtn.hidden = false;
+    openTikTokBtn.hidden = err.code !== "no_tab";
   }
   refreshStart();
 }
+
+// The account status follows the TikTok tabs: it is checked again whenever
+// one opens, finishes loading, changes address or closes. Logging in or out
+// reloads TikTok's page, so that is noticed too. A run manages its own tab,
+// so checks wait until it ends.
+let accountCheck = null;
+let accountTimer = null;
+
+function scheduleAccountCheck() {
+  clearTimeout(accountTimer);
+  accountTimer = setTimeout(async () => {
+    if (running) return;
+    if (accountCheck) {
+      await accountCheck;
+      return scheduleAccountCheck();
+    }
+    accountCheck = checkAccount().finally(() => (accountCheck = null));
+  }, 400);
+}
+
+const isTikTok = (url) => typeof url === "string" && url.startsWith("https://www.tiktok.com/");
+
+chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
+  if ((change.status === "complete" || change.url) && (isTikTok(tab.url) || tabId === session?.tabId)) scheduleAccountCheck();
+});
+chrome.tabs.onRemoved.addListener(scheduleAccountCheck);
 
 function useFolder(handle) {
   folder = handle;
@@ -487,11 +509,11 @@ async function run() {
     stopBtn.hidden = true;
     refreshStart();
     showArchiveState();
+    scheduleAccountCheck();
   }
 }
 
 openTikTokBtn.addEventListener("click", openTikTok);
-checkAccountBtn.addEventListener("click", checkAccount);
 
 pickFolderBtn.addEventListener("click", async () => {
   try {
