@@ -39,8 +39,16 @@ This is a rewrite; the original version lives in `references/v1/`.
   not rendered into a video.
 - **Metadata:** keep everything TikTok returns, including each time an item was
   seen online.
-- **Gallery:** a separate consumer of the archive folder, not part of the
-  extension. The folder format is the contract between them.
+- **Gallery:** `gallery.html` in the archive folder, rewritten with its data
+  after every run, however the run ended. It works opened straight from disk
+  with no extension installed, and reads only `gallery-data.js` and the media
+  files (a page opened from disk may not read `items/`). Thumbnails are each
+  video's frame at 1 s, drawn locally; TikTok's cover links expire.
+  `tools/build-gallery.mjs` rebuilds it without the extension.
+- **HEVC in the browser:** Chromium decodes HEVC only with hardware support,
+  and on the author's machine it cannot, so most videos play as sound only in
+  the gallery. The files are fine in a video player, and the gallery says so.
+  Preferring H.264 would trade quality for browser playback; not decided.
 - **Browser:** Chromium only.
 
 ## Staying on TikTok's good side
@@ -98,7 +106,10 @@ Still to do:
 
 ```text
 <archive>/
-  archive.json      { format, createdAt, account, firstDownload, failures }
+  archive.json      { format, createdAt, account, firstDownload, failures,
+                      lastFeedRequest }
+  gallery.html      A page to browse the archive; open it from the folder
+  gallery-data.js   What the page shows, rebuilt from items/ after every run
   items/<id>.json   One record per liked item
   Likes/            The media files
     <handle>_<id>.mp4                 a video
@@ -148,6 +159,7 @@ Each item record holds:
 extension/            The unpacked extension (load this folder)
   manifest.json
   background.js       Service worker: opens the dashboard
+  gallery/            The gallery page copied into each archive
   dashboard/          The extension's page: UI and run logic (index.js),
                       TikTok tab access (tiktok.js), folder access (folder.js),
                       streaming downloads (download.js)
@@ -159,6 +171,7 @@ test/                 Node tests (`npm test`)
 tools/
   smoke-test.mjs      Loads the extension in headless Chromium, checks the
                       dashboard opens (no TikTok requests)
+  build-gallery.mjs   Rebuilds an archive's gallery page from its records
   import-v1.mjs       One-off migration of a v1 archive (done for the
                       author's archive on 2026-10-14)
 references/           Background material, not shipped
@@ -190,12 +203,12 @@ Next steps, in order:
 
 1. Notice media files that went missing from older items (routine runs only
    look at the newest page).
-2. The gallery: a separate page that reads the archive folder. Records with
-   `raw: null` (imported from v1) carry their details in `legacy` instead.
+2. Decide on HEVC versus browser playback (see Decisions).
 3. Publish: GitHub first (license, install steps, screenshots), maybe the
    Chrome Web Store later (needs a privacy statement).
 
 Compare against v1 and myfaveTT at the end of each milestone. Currently ahead
 on quality choice, photo posts, honest failure reporting, crash safety,
-permissions and request volume; behind on having a viewer.
+permissions and request volume; even on having a viewer, except that most of the author's videos are HEVC and
+play without picture in Chromium.
 

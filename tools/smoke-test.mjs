@@ -67,16 +67,19 @@ try {
 
   const result = await send("Runtime.evaluate", {
     returnByValue: true,
-    expression: `({
+    expression: `(async () => ({
       version: document.getElementById("version").textContent,
       account: document.getElementById("account-status").textContent,
-      start: document.getElementById("start").disabled ? "disabled" : "enabled"
-    })`
+      start: document.getElementById("start").disabled ? "disabled" : "enabled",
+      galleryPage: await fetch(chrome.runtime.getURL("gallery/gallery.html")).then((r) => r.text()).then((t) => t.includes("gallery-data.js"))
+    }))()`,
+    awaitPromise: true
   });
   const state = result.result.result.value;
   console.log(state);
 
   if (!state.version.startsWith("v")) problems.push("version not shown");
+  if (!state.galleryPage) problems.push("gallery page not readable from the extension");
   if (!state.account.includes("TikTok is not open")) problems.push(`unexpected account status: ${state.account}`);
   if (problems.length) {
     failed = true;

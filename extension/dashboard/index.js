@@ -4,7 +4,8 @@ import { buildRecord, isSaved, isValidId, RECORD_FORMAT } from "../lib/record.js
 import { planItem, safeHandle, MEDIA_DIR } from "../lib/plan.js";
 import { withRetry } from "../lib/retry.js";
 import { connect, fetchLikesPage, openTikTok, TikTokError, lastFeedRequest } from "./tiktok.js";
-import { pickFolder, rememberedFolder, regainAccess, readJson, writeJson } from "./folder.js";
+import { pickFolder, rememberedFolder, regainAccess, readJson, writeJson, writeText } from "./folder.js";
+import { galleryData, galleryScript, GALLERY_PAGE, GALLERY_DATA } from "../lib/gallery.js";
 import { allowVideoDownloads, downloadPart, DownloadError } from "./download.js";
 
 const el = (id) => document.getElementById(id);
@@ -124,11 +125,27 @@ function refreshStart() {
   }
 }
 
+// Writes the gallery page and its data into the archive folder. Runs after
+// every run, however it ended; it only reads local files.
+async function writeGallery(dir) {
+  const archive = await readJson(dir, "archive.json");
+  if (!archive) return;
+  const itemsDir = await dir.getDirectoryHandle("items", { create: true });
+  const records = [];
+  for await (const [name, handle] of itemsDir.entries()) {
+    if (handle.kind !== "file" || !name.endsWith(".json")) continue;
+    records.push(JSON.parse(await (await handle.getFile()).text()));
+  }
+  const page = await fetch(chrome.runtime.getURL(`gallery/${GALLERY_PAGE}`)).then((res) => res.text());
+  await writeText(dir, GALLERY_DATA, galleryScript(galleryData(records, { account: archive.account, generatedAt: new Date().toISOString() })));
+  await writeText(dir, GALLERY_PAGE, page);
+}
+
 function describeArchive(archive) {
   const state = firstDownloadState(archive);
   if (state.complete) {
     const date = new Date(state.completedAt ?? Date.now()).toLocaleDateString();
-    return `All your likes are saved (first download finished on ${date}). Start fetches anything you have liked since your last run.`;
+    return `All your likes are saved (first download finished on ${date}). Start fetches anything you have liked since your last run. To browse them, open ${GALLERY_PAGE} in the folder.`;
   }
   if (state.nextCursor) {
     return "The first download of your likes is not finished. Start checks for new likes, then continues from where it stopped.";
@@ -447,13 +464,20 @@ async function run() {
       runStatus.textContent = `${describe(err)} Everything saved so far is kept.${until}`;
     }
   } finally {
-    // Kept for diagnosis: whether TikTok's page signed our feed requests.
-    if (lastFeedRequest && folder) {
+    if (folder) {
+      // Kept for diagnosis: whether TikTok's page signed our feed requests.
+      if (lastFeedRequest) {
+        try {
+          const archive = await readJson(folder, "archive.json");
+          if (archive) await writeJson(folder, "archive.json", { ...archive, lastFeedRequest: { ...lastFeedRequest, at: now } });
+        } catch {
+          // Diagnostics are optional.
+        }
+      }
       try {
-        const archive = await readJson(folder, "archive.json");
-        if (archive) await writeJson(folder, "archive.json", { ...archive, lastFeedRequest: { ...lastFeedRequest, at: now } });
-      } catch {
-        // Diagnostics are optional.
+        await writeGallery(folder);
+      } catch (err) {
+        runStatus.textContent += ` (The gallery page could not be updated: ${err.message})`;
       }
     }
     renderCounts(counts);
