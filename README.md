@@ -85,7 +85,8 @@ Still to do:
 
 - The feed request now carries the same parameters as the one TikTok's own
   Likes tab sends (observed 2026-10-14), including `count=16`, except
-  `video_encoding=dash` (see Decisions). Confirmed 2026-10-15: TikTok's page
+  `video_encoding=dash`, which is deliberately left out (decided 2026-10-17;
+  see Decisions). Confirmed 2026-10-15: TikTok's page
   signs our requests (msToken, X-Bogus, X-Gnarly). Each run records this in
   `archive.json` as `lastFeedRequest` (parameter names only, never values).
 - Routine runs now stop at the first page with nothing new, so `seenAt` is no
@@ -187,12 +188,12 @@ failure being retried through its page.
 
 Next steps, in order:
 
-1. Lower the captcha risk: decide on `video_encoding=dash`, and find out
-   whether the Origin/Referer rule is needed.
+1. Notice media files that went missing from older items (routine runs only
+   look at the newest page).
 2. The gallery: a separate page that reads the archive folder. Records with
    `raw: null` (imported from v1) carry their details in `legacy` instead.
-3. Prepare for a non-technical user: a more polished dashboard, setup help,
-   and eventually a Chrome Web Store listing.
+3. Publish: GitHub first (license, install steps, screenshots), maybe the
+   Chrome Web Store later (needs a privacy statement).
 
 Compare against v1 and myfaveTT at the end of each milestone. Currently ahead
 on quality choice, photo posts, honest failure reporting, crash safety,
