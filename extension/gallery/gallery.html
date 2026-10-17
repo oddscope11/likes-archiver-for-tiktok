@@ -32,20 +32,17 @@ main {
 header {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
 }
+
+h1, #summary { white-space: nowrap; }
 
 h1 { font-size: 1.5rem; margin: 0; }
 
 #summary { color: var(--muted); }
 
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 1rem 0;
-}
 
 input, select, button {
   font: inherit;
@@ -180,9 +177,6 @@ a { color: inherit; }
   <header>
     <h1>Liked TikToks</h1>
     <span id="summary"></span>
-  </header>
-
-  <div class="controls">
     <input id="search" type="search" placeholder="Search captions and creators" aria-label="Search">
     <select id="filter" aria-label="Show">
       <option value="all">Everything</option>
@@ -191,7 +185,7 @@ a { color: inherit; }
       <option value="gone">No longer in your likes</option>
       <option value="unsaved">Not saved</option>
     </select>
-  </div>
+  </header>
 
   <p id="empty" hidden></p>
   <ul id="grid"></ul>
