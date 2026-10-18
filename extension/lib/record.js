@@ -34,7 +34,18 @@ export function buildRecord(item, existing, { now, newerCursor, olderCursor }) {
 
 // True when the record says the item is saved and every file is still there.
 export function isSaved(record, fileExists) {
-  return record.media?.status === "saved" && record.media.files.every((entry) => fileExists(entry.file));
+  return (
+    record.media?.status === "saved" &&
+    record.media.files.every((entry) => fileExists(entry.file)) &&
+    !needsSoundLookup(record.kind, record.media.notes)
+  );
+}
+
+// The likes feed leaves out the sound of some photo posts. Their own page
+// has it, so a photo post saved without sound is not done until that page's
+// details have been checked too.
+export function needsSoundLookup(kind, notes = []) {
+  return kind === "photo" && notes.includes("no_audio") && !notes.includes("no_audio_in_details");
 }
 
 // For an item whose files are not all on disk, though it is recorded as saved

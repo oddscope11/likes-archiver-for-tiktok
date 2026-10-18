@@ -1,9 +1,9 @@
 import { walkFeed, parsePage, FeedError } from "../lib/feed.js";
 import { firstDownloadState, planWalks, lastFullCheckAt, topCheckedAt, isNew, retryCursors, nextCooldown } from "../lib/progress.js";
-import { buildRecord, isSaved, isValidId, missingFiles, RECORD_FORMAT } from "../lib/record.js";
+import { buildRecord, isSaved, isValidId, missingFiles, needsSoundLookup, RECORD_FORMAT } from "../lib/record.js";
 import { planItem, safeHandle, MEDIA_DIR } from "../lib/plan.js";
 import { withRetry, retryDelay } from "../lib/retry.js";
-import { connect, fetchLikesPage, openTikTok, TikTokError } from "./tiktok.js";
+import { connect, fetchLikesPage, fetchItemDetail, openTikTok, TikTokError } from "./tiktok.js";
 import { pickFolder, rememberedFolder, regainAccess, readJson, writeJson, writeText } from "./folder.js";
 import { galleryData, galleryScript, inlineGalleryPage, GALLERY_PAGE, GALLERY_DATA } from "../lib/gallery.js";
 import { allowVideoDownloads, downloadPart, DownloadError } from "./download.js";
@@ -304,17 +304,22 @@ function wait(ms, signal) {
 
 // Downloads everything for one item. Resolves to the record's `media` value,
 // which says either what was saved or why it could not be.
-async function saveItem(item, mediaDir, knownFiles, signal) {
+// `extraNotes` are added to the plan's own.
+async function saveItem(item, mediaDir, knownFiles, signal, extraNotes = []) {
   const plan = planItem(item);
   if (plan.problem) return { status: "failed", at: new Date().toISOString(), reason: plan.problem };
 
   const files = [];
-  const notes = [...plan.notes];
+  const notes = [...plan.notes, ...extraNotes];
   let current = null;
   try {
     for (const part of plan.parts) {
       current = part;
-      const saved = await downloadPart(mediaDir, part, signal);
+      // A part already in the folder, from an earlier attempt, is kept.
+      const onDisk = [...knownFiles].find((name) => name.startsWith(`${part.stem}.`));
+      const saved = onDisk
+        ? { name: onDisk, bytes: (await (await mediaDir.getFileHandle(onDisk)).getFile()).size }
+        : await downloadPart(mediaDir, part, signal);
       knownFiles.add(saved.name);
       files.push({
         role: part.role,
@@ -391,15 +396,35 @@ async function run({ full = false } = {}) {
 
     // If the TikTok tab is closed or reloaded mid-run, carry on through any
     // other open TikTok tab, as long as it is logged in to the same account.
-    const fetchPageAnyTab = async (cursor) => {
+    const anyTab = async (request) => {
       try {
-        return await fetchLikesPage(session.tabId, session.account.secUid, cursor);
+        return await request(session);
       } catch (err) {
         if (!(err instanceof TikTokError && err.code === "tab_unreachable")) throw err;
         const next = await connect();
         if (next.account.id !== session.account.id) throw new RunStopped("account_changed");
         session = next;
-        return fetchLikesPage(session.tabId, session.account.secUid, cursor);
+        return request(session);
+      }
+    };
+    const fetchPageAnyTab = (cursor) => anyTab((s) => fetchLikesPage(s.tabId, s.account.secUid, cursor));
+
+    // The sound of a photo post the feed left it out of, from the post's own
+    // details: its music, or null when that has no sound either. Pushback
+    // from TikTok ends the run like it does for the feed; any other problem
+    // leaves the post to be looked up again by a later run.
+    const lookUpSound = async (item) => {
+      try {
+        const body = await withRetry(() => anyTab((s) => fetchItemDetail(s.tabId, item.id)), {
+          delayFor: retryDelay,
+          wait: (ms) => wait(ms, signal)
+        });
+        const music = body?.statusCode === 0 ? body.itemInfo?.itemStruct?.music : undefined;
+        if (music === undefined) return undefined;
+        return music?.playUrl ? music : null;
+      } catch (err) {
+        if (err.name === "AbortError" || isPushback(err) || err instanceof RunStopped) throw err;
+        return undefined;
       }
     };
 
@@ -445,7 +470,19 @@ async function run({ full = false } = {}) {
         }
 
         runStatus.textContent = `Saving a ${record.kind === "photo" ? "photo post" : "video"} by @${safeHandle(item.author?.uniqueId)}…`;
-        record.media = await saveItem(item, mediaDir, knownFiles, signal);
+        let toSave = item;
+        let extraNotes = [];
+        if (needsSoundLookup(record.kind, planItem(item).notes)) {
+          await wait(1000 + Math.random() * 1500, signal);
+          const music = await lookUpSound(item);
+          if (music) {
+            toSave = { ...item, music };
+            record.raw = toSave;
+          } else if (music === null) {
+            extraNotes = ["no_audio_in_details"];
+          }
+        }
+        record.media = await saveItem(toSave, mediaDir, knownFiles, signal, extraNotes);
         await writeJson(itemsDir, name, record);
 
         // archive.json lists failed items and the page each was found on.

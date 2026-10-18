@@ -36,7 +36,10 @@ How TikTok Likes Archiver works and why. For installing and using it, see the
   video-only streams that need a local remux. Every offered stream is kept in
   the raw record, so this can be revisited.
 - **Photo posts:** saved as the original images in order plus the audio track,
-  not rendered into a video.
+  not rendered into a video. The likes feed leaves out the sound address of
+  some of them (seen with a copyrighted song); for those, one request for the
+  post's own details (`/api/item/detail/`, as its page makes) supplies it.
+  A post with no sound there either gets the note `no_audio_in_details`.
 - **Metadata:** keep everything TikTok returns, including each time an item was
   seen online.
 - **Gallery:** `gallery.html` in the archive folder, rewritten with its data

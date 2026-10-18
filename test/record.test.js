@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildRecord, classify, isSaved, missingFiles, isValidId } from "../extension/lib/record.js";
+import { buildRecord, classify, isSaved, missingFiles, isValidId, needsSoundLookup } from "../extension/lib/record.js";
 
 const seen = (now) => ({ now, newerCursor: "200", olderCursor: "100" });
 
@@ -59,6 +59,16 @@ test("an item is saved only if its record says so and every file is present", ()
   assert.ok(!isSaved(saved("Likes/a.jpg", "Likes/missing.jpg"), exists));
   assert.ok(!isSaved({ media: null }, exists));
   assert.ok(!isSaved({ media: { status: "failed", reason: "http" } }, exists));
+});
+
+test("a photo post saved without sound is unfinished until its own page was checked", () => {
+  assert.ok(needsSoundLookup("photo", ["no_audio"]));
+  assert.ok(!needsSoundLookup("photo", ["no_audio", "no_audio_in_details"]));
+  assert.ok(!needsSoundLookup("photo", []));
+  assert.ok(!needsSoundLookup("video", ["no_audio"]));
+  const photo = { kind: "photo", feedWindow: { newerCursor: "7" }, media: { status: "saved", files: [], notes: ["no_audio"] } };
+  assert.ok(!isSaved(photo, () => true));
+  assert.equal(missingFiles(photo, () => true), "7");
 });
 
 test("fields added by other tools survive a later sighting", () => {

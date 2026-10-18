@@ -31,11 +31,12 @@ function pageReadAccount() {
   }
 }
 
-// Builds the request the way TikTok's own Likes tab does, with the same
-// parameters taken from the page's state (observed 2026-10-14; myfaveTT does
-// the same). TikTok's page adds its signature (msToken, X-Bogus, X-Gnarly) to
-// requests made through its fetch.
-async function pageFetchLikes(secUid, cursor) {
+// Builds a request the way TikTok's own pages do, with the same parameters
+// taken from the page's state (observed for the Likes tab on 2026-10-14 and a
+// post's page on 2026-10-18; myfaveTT does the same). `specific` holds the
+// parameters of that one request. TikTok's page adds its signature (msToken,
+// X-Bogus, X-Gnarly) to requests made through its fetch.
+async function pageFetchApi(path, specific) {
   let scope = {};
   try {
     scope = JSON.parse(document.getElementById("__UNIVERSAL_DATA_FOR_REHYDRATION__").textContent).__DEFAULT_SCOPE__ ?? {};
@@ -65,9 +66,7 @@ async function pageFetchLikes(secUid, cursor) {
     channel: "tiktok_web",
     clientABVersions: abVersions.join(","),
     cookie_enabled: navigator.cookieEnabled,
-    count: "16",
     coverFormat: "2",
-    cursor,
     data_collection_enabled: true,
     device_id: app.wid,
     device_platform: "web_pc",
@@ -77,28 +76,26 @@ async function pageFetchLikes(secUid, cursor) {
     is_fullscreen: matchMedia("(display-mode: fullscreen)").matches,
     is_page_visible: document.visibilityState === "visible",
     language: app.language,
-    needPinnedItemIds: true,
     odinId: app.odinId,
     os,
-    post_item_list_request_type: "0",
     priority_region: app.user?.region,
     referer: document.referrer,
     region: app.region,
     root_referer: document.referrer,
     screen_height: screen.height,
     screen_width: screen.width,
-    secUid,
     tz_name: Intl.DateTimeFormat().resolvedOptions().timeZone,
     user_is_login: true,
     verifyFp: document.cookie.match(/s_v_web_id=(\w+)/)?.[1],
-    webcast_language: app.language
+    webcast_language: app.language,
+    ...specific
   };
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(values)) {
     if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
   }
   try {
-    const res = await fetch("/api/favorite/item_list/?" + params, { credentials: "include" });
+    const res = await fetch(`${path}?${params}`, { credentials: "include" });
     return { status: res.status, text: await res.text() };
   } catch (err) {
     return { networkError: String(err) };
@@ -141,8 +138,24 @@ export async function connect() {
 }
 
 // Fetches one page of the likes feed and returns the parsed response body.
-export async function fetchLikesPage(tabId, secUid, cursor) {
-  const result = await runInPage(tabId, pageFetchLikes, [secUid, cursor]);
+export function fetchLikesPage(tabId, secUid, cursor) {
+  return fetchApi(tabId, "/api/favorite/item_list/", {
+    count: "16",
+    cursor,
+    needPinnedItemIds: true,
+    post_item_list_request_type: "0",
+    secUid
+  });
+}
+
+// Fetches what a post's own page shows about it. The likes feed leaves out
+// the sound of some photo posts (copyrighted songs); this has it.
+export function fetchItemDetail(tabId, itemId) {
+  return fetchApi(tabId, "/api/item/detail/", { itemId });
+}
+
+async function fetchApi(tabId, path, specific) {
+  const result = await runInPage(tabId, pageFetchApi, [path, specific]);
   if (!result) throw new TikTokError("tab_unreachable", "no result from the page");
   if (result.networkError) throw new TikTokError("network", result.networkError);
   if (result.status === 429) throw new TikTokError("rate_limited");
