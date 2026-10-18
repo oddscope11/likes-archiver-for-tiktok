@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- A liked item going into a box: the heart drops into an open tray. -->
+  <rect x="4" y="4" width="120" height="120" rx="26" fill="#23303f"/>
+  <path d="M64 78 C 40 62, 26 50, 26 36 C 26 25, 34 18, 44 18 C 52 18, 59 23, 64 30 C 69 23, 76 18, 84 18 C 94 18, 102 25, 102 36 C 102 50, 88 62, 64 78 Z" fill="#f2b84b"/>
+  <path d="M24 82 V 100 Q 24 106 30 106 H 98 Q 104 106 104 100 V 82" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
