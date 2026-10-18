@@ -49,9 +49,9 @@ then, not every time.
 Press **Open gallery** to browse what is saved, or open `gallery.html` in the
 folder.
 
-If TikTok shows a verification puzzle or refuses requests, the run stops and
-says so. Complete the puzzle on the TikTok tab and wait a while before
-starting again.
+If TikTok ever pushes back, for example by refusing requests, the run stops
+at once and says what happened. Everything saved so far is kept; wait a
+while before running again.
 
 ## What ends up in the folder
 

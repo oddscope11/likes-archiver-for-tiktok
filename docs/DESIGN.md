@@ -189,12 +189,15 @@ package.json          npm test; npm run package zips the committed extension/
 ## Status
 
 Working end to end: the first download, resuming, update runs that stop at
-the first page with nothing new, failure retries, photo posts (with and
-without audio) and the gallery.
+the first page with nothing new, full checks, retrying an item through its
+page, photo posts (including sound from a post's details) and the gallery.
 
 Not yet seen working live: the verification/captcha handling, the suggested
-wait, switching to another TikTok tab when the one in use closes, and a
-failure being retried through its page.
+wait, and switching to another TikTok tab when the one in use closes. No run
+has ever been met with a verification or a refusal. The response treated as
+a verification (`type: "verify"`) is taken from myfaveTT, and the empty
+answer treated as a refusal from early hand-made requests; neither has been
+seen by the extension itself.
 
 Next:
 
