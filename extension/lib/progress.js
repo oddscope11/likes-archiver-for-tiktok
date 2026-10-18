@@ -19,6 +19,19 @@ export function planWalks(state) {
   ];
 }
 
+// An update walk stops at the first page holding nothing new. "New" means
+// not yet seen when the last complete check of the top of the feed began, so
+// items first seen by an interrupted walk still count as new and the next
+// run walks past them instead of stopping on a page it only half finished.
+export function topCheckedAt(archive) {
+  return archive?.topCheckedAt ?? archive?.firstDownload?.completedAt ?? null;
+}
+
+export function isNew(existingRecord, checkedAt) {
+  if (!existingRecord) return true;
+  return checkedAt !== null && existingRecord.firstSeenAt > checkedAt;
+}
+
 // Failed items are retried by requesting just the page they were found on.
 // `failures` maps item id to that page's cursor. Returns unique cursors for
 // items this run has not already seen, at most `limit` of them.

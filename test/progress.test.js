@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { firstDownloadState, planWalks, retryCursors, nextCooldown, isCoolingDown } from "../extension/lib/progress.js";
+import { firstDownloadState, planWalks, topCheckedAt, isNew, retryCursors, nextCooldown, isCoolingDown } from "../extension/lib/progress.js";
 
 test("a new archive starts its first download from the top", () => {
   const state = firstDownloadState({});
@@ -49,4 +49,19 @@ test("cooling down until the stated time", () => {
   assert.ok(isCoolingDown({ until: 2000 }, 1000));
   assert.ok(!isCoolingDown({ until: 2000 }, 2000));
   assert.ok(!isCoolingDown(null, 1000));
+});
+
+test("items first seen by an interrupted walk still count as new", () => {
+  const checkedAt = "2026-10-14T10:00:00.000Z";
+  assert.ok(isNew(null, checkedAt));
+  assert.ok(!isNew({ firstSeenAt: "2026-10-13T10:00:00.000Z" }, checkedAt));
+  assert.ok(!isNew({ firstSeenAt: checkedAt }, checkedAt));
+  assert.ok(isNew({ firstSeenAt: "2026-10-14T11:00:00.000Z" }, checkedAt));
+  assert.ok(!isNew({ firstSeenAt: "2026-10-14T11:00:00.000Z" }, null));
+});
+
+test("the last complete check falls back to when the first download finished", () => {
+  assert.equal(topCheckedAt({ topCheckedAt: "b", firstDownload: { completedAt: "a" } }), "b");
+  assert.equal(topCheckedAt({ firstDownload: { completedAt: "a" } }), "a");
+  assert.equal(topCheckedAt({}), null);
 });

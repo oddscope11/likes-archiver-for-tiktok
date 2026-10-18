@@ -75,4 +75,5 @@ test("saved items whose files went missing are fetched again through their page"
   assert.equal(missingFiles(record, () => false), "123");
   assert.equal(missingFiles({ ...record, feedWindow: null }, () => false), null);
   assert.equal(missingFiles({ media: { status: "failed" } }, () => false), undefined);
+  assert.equal(missingFiles({ media: null, feedWindow: { newerCursor: "7" } }, () => false), "7");
 });

@@ -1,5 +1,5 @@
 import { walkFeed, parsePage, FeedError } from "../lib/feed.js";
-import { firstDownloadState, planWalks, retryCursors, nextCooldown, isCoolingDown } from "../lib/progress.js";
+import { firstDownloadState, planWalks, topCheckedAt, isNew, retryCursors, nextCooldown, isCoolingDown } from "../lib/progress.js";
 import { buildRecord, isSaved, isValidId, missingFiles, RECORD_FORMAT } from "../lib/record.js";
 import { planItem, safeHandle, MEDIA_DIR } from "../lib/plan.js";
 import { withRetry } from "../lib/retry.js";
@@ -363,8 +363,7 @@ async function run() {
     const knownFiles = new Set();
     for await (const name of mediaDir.keys()) knownFiles.add(name);
     const fileExists = (path) => knownFiles.has(path.slice(MEDIA_DIR.length + 1));
-    const knownIds = new Set();
-    for await (const name of itemsDir.keys()) if (name.endsWith(".json")) knownIds.add(name.slice(0, -5));
+    const checkedAt = topCheckedAt(archive);
     const seenThisRun = new Set();
 
     // Saved items whose files have gone missing are fetched again through
@@ -413,8 +412,8 @@ async function run() {
 
     let refusalsInARow = 0;
 
-    // Saves what is missing from one page. Returns how many of its items no
-    // earlier run had seen.
+    // Saves what is missing from one page. Returns how many of its items are
+    // new (see isNew).
     const processPage = async (page) => {
       let fresh = 0;
       for (const item of page.items) {
@@ -425,13 +424,11 @@ async function run() {
           continue;
         }
         seenThisRun.add(item.id);
-        if (!knownIds.has(item.id)) {
-          fresh++;
-          knownIds.add(item.id);
-        }
 
         const name = `${item.id}.json`;
-        const record = buildRecord(item, await readJson(itemsDir, name), { now, ...page });
+        const existing = await readJson(itemsDir, name);
+        if (isNew(existing, checkedAt)) fresh++;
+        const record = buildRecord(item, existing, { now, ...page });
 
         // Record the sighting before downloading, so it survives a crash.
         await writeJson(itemsDir, name, record);
@@ -484,12 +481,15 @@ async function run() {
             break;
           }
         }
+        // The top of the feed is now fully checked.
+        await saveArchive({ topCheckedAt: now });
         // Walking all the way down covers whatever the first download missed.
         if (reachedEnd) {
           if (!firstDownloadState(archive).complete) await completeFirstDownload();
           break;
         }
       } else {
+        if (walk.from === "0") await saveArchive({ topCheckedAt: now });
         runStatus.textContent = "Downloading all your likes…";
         for await (const page of walkFrom(walk.from)) {
           await processPage(page);
