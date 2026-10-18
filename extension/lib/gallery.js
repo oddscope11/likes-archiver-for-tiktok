@@ -3,6 +3,7 @@
 // records itself, so a run writes this file next to it.
 
 import { isGone } from "./progress.js";
+import { thumbPath } from "./plan.js";
 
 export const GALLERY_PAGE = "gallery.html";
 export const GALLERY_DATA = "gallery-data.js";
@@ -29,7 +30,8 @@ function feedOrder(a, b) {
   return page || (Number.isNaN(place) ? 0 : place) || b.entry.postedAt - a.entry.postedAt || (a.entry.id < b.entry.id ? 1 : -1);
 }
 
-export function galleryEntry(record, { lastFullCheckAt = null } = {}) {
+// `thumbs` holds the ids of videos with a thumbnail file.
+export function galleryEntry(record, { lastFullCheckAt = null, thumbs = new Set() } = {}) {
   const raw = record.raw;
   const media = record.media ?? {};
   const postedAt = number(raw?.createTime) * 1000;
@@ -51,14 +53,15 @@ export function galleryEntry(record, { lastFullCheckAt = null } = {}) {
     hevc: /265|hevc|hvc/i.test(codecName),
     saved: media.status === "saved",
     inLikes: !isGone(record, lastFullCheckAt),
+    thumb: thumbs.has(record.id) ? thumbPath(record.id) : null,
     files
   };
 }
 
 // Newest likes first, in the order the likes feed lists them.
-export function galleryData(records, { account, generatedAt, lastFullCheckAt = null }) {
+export function galleryData(records, { account, generatedAt, lastFullCheckAt = null, thumbs }) {
   const items = records
-    .map((record) => ({ record, entry: galleryEntry(record, { lastFullCheckAt }) }))
+    .map((record) => ({ record, entry: galleryEntry(record, { lastFullCheckAt, thumbs }) }))
     .sort(feedOrder)
     .map(({ entry }) => entry);
   return { generatedAt, account: account?.uniqueId ?? null, items };

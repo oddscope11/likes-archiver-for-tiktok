@@ -5,6 +5,10 @@ import { rankStreams } from "./select.js";
 
 export const MEDIA_DIR = "Likes";
 
+// Gallery thumbnails of saved videos, made locally from the video file.
+export const THUMB_DIR = "thumbnails";
+export const thumbPath = (id) => `${THUMB_DIR}/${id}.jpg`;
+
 // Creator handles become part of file names, so keep only safe characters.
 export function safeHandle(uniqueId) {
   const cleaned = String(uniqueId ?? "")

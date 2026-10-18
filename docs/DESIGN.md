@@ -100,6 +100,8 @@ Open questions:
     <handle>_<id>.mp4                 a video
     <handle>_<id>_01.jpg, _02.jpg…    a photo post's images, in order
     <handle>_<id>_audio.mp3           a photo post's audio (.mp3 or .m4a)
+  thumbnails/<id>.jpg                 a video's frame at one second, 240 px
+                                      wide, made locally for the gallery
 ```
 
 
@@ -133,6 +135,12 @@ whole feed completes (the first download or a full check), an item it did not
 see is no longer in the likes: deleted, made private or unliked.
 `lastFullCheckAt` is when that walk started, and an item seen after it is
 back. Archives from before `startedAt` was recorded count from `createdAt`.
+
+At the end of a run, every saved video without a thumbnail gets one, made
+from the file on disk. There is no migration step: an archive from before
+thumbnails existed simply has them all missing, and a stopped run leaves the
+rest for the next. A browser that cannot decode a video (HEVC without
+hardware support) makes none, and the gallery draws the frame itself.
 
 Before walking, a run reads every record and checks its files are on disk.
 Items with missing files, or that a stopped run never tried, join `failures`
@@ -175,7 +183,7 @@ extension/            The unpacked extension (load this folder)
   dashboard/          The extension's page: UI and run logic (index.js),
                       TikTok tab access (tiktok.js), folder access (folder.js),
                       streaming downloads (download.js), the latest-likes
-                      strip (latest.js)
+                      strip (latest.js), thumbnails (thumbnail.js)
   lib/                Pure logic, covered by tests: feed walking, records,
                       stream selection, download plans, file sniffing,
                       run planning and suggested waits, retries

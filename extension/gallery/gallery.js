@@ -89,6 +89,10 @@ const thumbObserver = new IntersectionObserver((entries) => {
     const item = entry.target._item;
     const [image] = filesOf(item, "image");
     const [video] = filesOf(item, "video");
+    if (item.thumb) {
+      entry.target.prepend(make("img", { src: href(item.thumb), alt: "", decoding: "async" }));
+      continue;
+    }
     if (video && item.hevc && !canPlayHevc) continue;
     if (image) {
       entry.target.prepend(make("img", { src: href(image.file), alt: "", loading: "lazy", decoding: "async" }));

@@ -62,12 +62,12 @@ export async function readJson(dir, name) {
 }
 
 export async function writeJson(dir, name, value) {
-  await writeText(dir, name, JSON.stringify(value, null, 2));
+  await writeFile(dir, name, JSON.stringify(value, null, 2));
 }
 
-// The browser writes to a temporary file and swaps it in on close, so a crash
-// mid-write leaves the previous version intact.
-export async function writeText(dir, name, text) {
+// Writes text or a Blob. The browser writes to a temporary file and swaps it
+// in on close, so a crash mid-write leaves the previous version intact.
+export async function writeFile(dir, name, text) {
   const fileHandle = await dir.getFileHandle(name, { create: true });
   const writable = await fileHandle.createWritable();
   try {

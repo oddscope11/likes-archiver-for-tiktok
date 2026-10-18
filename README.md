@@ -61,6 +61,7 @@ gallery-data.js     What the gallery shows
 archive.json        Which account this is, and how far the download got
 items/<id>.json     Everything TikTok said about each liked item
 Likes/              The videos, photos and sounds
+thumbnails/         Small pictures of the videos for the gallery
 ```
 
 The folder is the archive: it stays useful without the extension.

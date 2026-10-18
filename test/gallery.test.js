@@ -25,6 +25,7 @@ test("an entry carries what the page shows, and only file roles and paths", () =
     hevc: false,
     saved: true,
     inLikes: true,
+    thumb: null,
     files: [{ role: "video", file: "Likes/maker_1.mp4" }]
   });
 });
@@ -34,6 +35,11 @@ test("items a completed full check did not see are marked as no longer in likes"
   assert.equal(galleryEntry(seen("2026-10-01T00:00:00.000Z")).inLikes, true);
   assert.equal(galleryEntry(seen("2026-10-01T00:00:00.000Z"), { lastFullCheckAt: "2026-10-02T00:00:00.000Z" }).inLikes, false);
   assert.equal(galleryEntry(seen("2026-10-03T00:00:00.000Z"), { lastFullCheckAt: "2026-10-02T00:00:00.000Z" }).inLikes, true);
+});
+
+test("a video with a thumbnail file points at it", () => {
+  assert.equal(galleryEntry(fromFeed("1", "1"), { thumbs: new Set(["1"]) }).thumb, "thumbnails/1.jpg");
+  assert.equal(galleryEntry(fromFeed("2", "1"), { thumbs: new Set(["1"]) }).thumb, null);
 });
 
 test("HEVC videos are marked", () => {

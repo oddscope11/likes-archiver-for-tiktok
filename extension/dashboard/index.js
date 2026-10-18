@@ -1,10 +1,11 @@
 import { walkFeed, parsePage, FeedError } from "../lib/feed.js";
 import { firstDownloadState, planWalks, lastFullCheckAt, topCheckedAt, isNew, retryCursors, nextCooldown } from "../lib/progress.js";
 import { buildRecord, isSaved, isValidId, missingFiles, needsSoundLookup, RECORD_FORMAT } from "../lib/record.js";
-import { planItem, safeHandle, MEDIA_DIR } from "../lib/plan.js";
+import { planItem, safeHandle, MEDIA_DIR, THUMB_DIR } from "../lib/plan.js";
 import { withRetry, retryDelay } from "../lib/retry.js";
 import { connect, fetchLikesPage, fetchItemDetail, openTikTok, TikTokError } from "./tiktok.js";
-import { pickFolder, rememberedFolder, regainAccess, readJson, writeJson, writeText } from "./folder.js";
+import { pickFolder, rememberedFolder, regainAccess, readJson, writeJson, writeFile } from "./folder.js";
+import { makeThumbnail } from "./thumbnail.js";
 import { galleryData, galleryScript, inlineGalleryPage, GALLERY_PAGE, GALLERY_DATA } from "../lib/gallery.js";
 import { allowVideoDownloads, downloadPart, DownloadError } from "./download.js";
 import { showLatest, addSaved } from "./latest.js";
@@ -147,9 +148,18 @@ async function writeGallery(dir) {
   }
   const source = (name) => fetch(chrome.runtime.getURL(`gallery/${name}`)).then((res) => res.text());
   const page = inlineGalleryPage(await source(GALLERY_PAGE), await source("gallery.js"));
-  const data = galleryData(records, { account: archive.account, generatedAt: new Date().toISOString(), lastFullCheckAt: lastFullCheckAt(archive) });
-  await writeText(dir, GALLERY_DATA, galleryScript(data));
-  await writeText(dir, GALLERY_PAGE, page);
+  const thumbs = await thumbIds(dir);
+  const data = galleryData(records, { account: archive.account, generatedAt: new Date().toISOString(), lastFullCheckAt: lastFullCheckAt(archive), thumbs });
+  await writeFile(dir, GALLERY_DATA, galleryScript(data));
+  await writeFile(dir, GALLERY_PAGE, page);
+}
+
+// The ids of videos that have a thumbnail file.
+async function thumbIds(dir) {
+  const ids = new Set();
+  const thumbsDir = await dir.getDirectoryHandle(THUMB_DIR, { create: true });
+  for await (const name of thumbsDir.keys()) if (name.endsWith(".jpg")) ids.add(name.slice(0, -4));
+  return ids;
 }
 
 // "today", "yesterday" or a short date such as "18 Oct".
@@ -422,9 +432,13 @@ async function run({ full = false } = {}) {
     // the page they were found on, like failed items.
     runStatus.textContent = "Checking the files in the folder…";
     const missing = { ...archive.failures };
+    // Saved videos, by id, for making any thumbnails that are missing.
+    const videoFiles = new Map();
     for await (const [name, handle] of itemsDir.entries()) {
       if (handle.kind !== "file" || !name.endsWith(".json")) continue;
       const record = JSON.parse(await (await handle.getFile()).text());
+      const video = record.media?.files?.find((file) => file.role === "video");
+      if (video && fileExists(video.file)) videoFiles.set(record.id, video.file);
       const cursor = missingFiles(record, fileExists);
       if (cursor === undefined) continue;
       if (cursor === null) {
@@ -530,6 +544,8 @@ async function run({ full = false } = {}) {
         const failures = { ...archive.failures };
         if (record.media.status === "saved") {
           counts.saved++;
+          const video = record.media.files.find((file) => file.role === "video");
+          if (video) videoFiles.set(record.id, video.file);
           addSaved(record, mediaDir).catch(() => {});
           refusalsInARow = 0;
           if (item.id in failures) {
@@ -611,6 +627,21 @@ async function run({ full = false } = {}) {
       await pause();
       const page = parsePage(await fetchPage(cursor));
       await processPage({ items: page.items, newerCursor: cursor, olderCursor: page.cursor });
+    }
+
+    // Every saved video gets a thumbnail file for the gallery, made from the
+    // video on disk. Whichever are missing are made here, so this also fills
+    // in archives saved before thumbnails existed, a little each run if the
+    // run is stopped.
+    const thumbsDir = await folder.getDirectoryHandle(THUMB_DIR, { create: true });
+    const haveThumbs = await thumbIds(folder);
+    const toMake = [...videoFiles].filter(([id]) => !haveThumbs.has(id));
+    for (const [index, [id, path]] of toMake.entries()) {
+      runStatus.textContent = `Making thumbnails for the gallery… ${index + 1} of ${toMake.length}`;
+      const file = await (await mediaDir.getFileHandle(path.slice(MEDIA_DIR.length + 1))).getFile();
+      const thumb = await makeThumbnail(file, signal);
+      signal.throwIfAborted();
+      if (thumb) await writeFile(thumbsDir, `${id}.jpg`, thumb);
     }
 
     runStatus.textContent = Object.keys(archive.failures ?? {}).length

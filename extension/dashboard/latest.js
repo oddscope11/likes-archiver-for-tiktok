@@ -4,7 +4,7 @@
 // on disk.
 
 import { galleryEntry, parseGalleryScript, GALLERY_DATA } from "../lib/gallery.js";
-import { MEDIA_DIR } from "../lib/plan.js";
+import { MEDIA_DIR, THUMB_DIR } from "../lib/plan.js";
 
 const STRIP_SIZE = 24;
 const strip = document.getElementById("latest");
@@ -22,6 +22,11 @@ const describe = (entry) => {
 async function fileUrl(mediaDir, path) {
   const name = path.slice(MEDIA_DIR.length + 1);
   return URL.createObjectURL(await (await mediaDir.getFileHandle(name)).getFile());
+}
+
+async function thumbUrl(folder, path) {
+  const dir = await folder.getDirectoryHandle(THUMB_DIR);
+  return URL.createObjectURL(await (await dir.getFileHandle(path.slice(THUMB_DIR.length + 1))).getFile());
 }
 
 // A video's frame at one second is drawn into a canvas and the player is
@@ -61,16 +66,16 @@ function drawFrame(li, url) {
   );
 }
 
-async function tile(entry, mediaDir) {
+async function tile(entry, mediaDir, folder) {
   const li = document.createElement("li");
   li.title = `@${entry.handle}${entry.caption ? `: ${entry.caption}` : ""}`;
   const image = entry.files.find((f) => f.role === "image");
   const video = entry.files.find((f) => f.role === "video");
   try {
-    if (image) {
+    if (image || entry.thumb) {
       const img = document.createElement("img");
       img.alt = "";
-      img.src = await fileUrl(mediaDir, image.file);
+      img.src = image ? await fileUrl(mediaDir, image.file) : await thumbUrl(folder, entry.thumb);
       li.append(img);
     } else if (video) {
       drawFrame(li, await fileUrl(mediaDir, video.file));
@@ -96,7 +101,7 @@ export async function showLatest(folder) {
     const text = await (await (await folder.getFileHandle(GALLERY_DATA)).getFile()).text();
     const mediaDir = await folder.getDirectoryHandle(MEDIA_DIR);
     const entries = parseGalleryScript(text).items.filter((entry) => entry.saved).slice(0, STRIP_SIZE);
-    strip.append(...(await Promise.all(entries.map((entry) => tile(entry, mediaDir)))));
+    strip.append(...(await Promise.all(entries.map((entry) => tile(entry, mediaDir, folder)))));
   } catch {
     // No gallery data yet: the strip fills as items are saved.
   }

@@ -5,7 +5,7 @@
 
 import { rememberedFolder, regainAccess } from "../dashboard/folder.js";
 import { parseGalleryScript, GALLERY_DATA } from "../lib/gallery.js";
-import { MEDIA_DIR } from "../lib/plan.js";
+import { MEDIA_DIR, THUMB_DIR } from "../lib/plan.js";
 
 // Chromium asks for a click before it grants folder access again.
 function askForAccess(handle, report) {
@@ -43,15 +43,20 @@ export async function load(urls, report) {
       return null;
     }
 
-    const mediaFiles = [];
-    const mediaDir = await folder.getDirectoryHandle(MEDIA_DIR);
-    for await (const [name, handle] of mediaDir.entries()) {
-      if (handle.kind === "file") mediaFiles.push([name, handle]);
+    const files = [];
+    for (const dirName of [MEDIA_DIR, THUMB_DIR]) {
+      let dir;
+      try {
+        dir = await folder.getDirectoryHandle(dirName);
+      } catch {
+        continue;
+      }
+      for await (const [name, handle] of dir.entries()) {
+        if (handle.kind === "file") files.push([`${dirName}/${name}`, handle]);
+      }
     }
 
-    await Promise.all(
-      mediaFiles.map(async ([name, handle]) => urls.set(`${MEDIA_DIR}/${name}`, URL.createObjectURL(await handle.getFile())))
-    );
+    await Promise.all(files.map(async ([path, handle]) => urls.set(path, URL.createObjectURL(await handle.getFile()))));
 
     if (data.account) document.title = `Liked TikToks · @${data.account}`;
     return data;
