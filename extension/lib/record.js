@@ -39,8 +39,8 @@ export function isSaved(record, fileExists) {
 
 // For an item whose files are not all on disk, though it is recorded as saved
 // or a run stopped before trying it: the cursor of the feed page to fetch it
-// again from, or null when it cannot be fetched again (items imported from
-// the first version have no page). Failed items are tracked elsewhere.
+// again from, or null when no page is known. Failed items are tracked
+// elsewhere.
 export function missingFiles(record, fileExists) {
   if (record.media?.status === "failed" || isSaved(record, fileExists)) return undefined;
   return record.feedWindow?.newerCursor ?? null;

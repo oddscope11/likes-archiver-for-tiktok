@@ -1,5 +1,5 @@
 import { walkFeed, parsePage, FeedError } from "../lib/feed.js";
-import { firstDownloadState, planWalks, topCheckedAt, isNew, retryCursors, nextCooldown } from "../lib/progress.js";
+import { firstDownloadState, planWalks, lastFullCheckAt, topCheckedAt, isNew, retryCursors, nextCooldown } from "../lib/progress.js";
 import { buildRecord, isSaved, isValidId, missingFiles, RECORD_FORMAT } from "../lib/record.js";
 import { planItem, safeHandle, MEDIA_DIR } from "../lib/plan.js";
 import { withRetry, retryDelay } from "../lib/retry.js";
@@ -18,6 +18,7 @@ const pickFolderBtn = el("pick-folder");
 const regainFolderBtn = el("regain-folder");
 const startBtn = el("start");
 const stopBtn = el("stop");
+const fullCheckBtn = el("full-check");
 const runStatus = el("run-status");
 const runCounts = el("run-counts");
 const failuresList = el("failures");
@@ -119,6 +120,7 @@ function refreshStart() {
   const cooldown = readCooldown();
   const cooling = Boolean(cooldown) && Date.now() < cooldown.until;
   startBtn.disabled = running || !session || !folder;
+  fullCheckBtn.disabled = startBtn.disabled;
   cooldownNote.hidden = !cooling || running;
   clearTimeout(cooldownTimer);
   if (cooling) {
@@ -140,20 +142,32 @@ async function writeGallery(dir) {
   }
   const source = (name) => fetch(chrome.runtime.getURL(`gallery/${name}`)).then((res) => res.text());
   const page = inlineGalleryPage(await source(GALLERY_PAGE), await source("gallery.js"));
-  await writeText(dir, GALLERY_DATA, galleryScript(galleryData(records, { account: archive.account, generatedAt: new Date().toISOString() })));
+  const data = galleryData(records, { account: archive.account, generatedAt: new Date().toISOString(), lastFullCheckAt: lastFullCheckAt(archive) });
+  await writeText(dir, GALLERY_DATA, galleryScript(data));
   await writeText(dir, GALLERY_PAGE, page);
 }
 
 function describeArchive(archive) {
   const state = firstDownloadState(archive);
+  if (state.complete && archive.fullCheck) {
+    return "A full check of your likes is not finished. Start checks for new likes, then continues it from where it stopped.";
+  }
   if (state.complete) {
-    const date = new Date(state.completedAt ?? Date.now()).toLocaleDateString();
-    return `All your likes are saved (first download finished ${date}). Start fetches what you have liked since.`;
+    const checked = new Date(lastFullCheckAt(archive) ?? Date.now()).toLocaleDateString();
+    return `All your likes are saved. Start fetches what you have liked since. Full check goes through all of them again${fullCheckLength(archive)} to find anything missing and anything no longer in your likes (last done ${checked}).`;
   }
   if (state.nextCursor) {
     return "The first download of your likes is not finished. Start checks for new likes, then continues from where it stopped.";
   }
   return "Nothing has been downloaded yet. Start begins the first download of all your likes.";
+}
+
+// Rough length of a full check, from how many likes the last full walk saw:
+// 16 per page, about 7 seconds apart.
+function fullCheckLength(archive) {
+  if (!archive.likesCount) return "";
+  const pages = Math.ceil(archive.likesCount / 16);
+  return ` (about ${pages} pages, roughly ${Math.max(1, Math.round((pages * 7) / 60))} minutes)`;
 }
 
 async function showArchiveState() {
@@ -162,6 +176,7 @@ async function showArchiveState() {
     const archive = await readJson(folder, "archive.json");
     archiveStatus.textContent = describeArchive(archive);
     openGalleryBtn.hidden = !archive;
+    fullCheckBtn.hidden = !firstDownloadState(archive).complete || Boolean(archive.fullCheck);
   } catch (err) {
     archiveStatus.textContent = `The archive in this folder could not be read: ${err.message}`;
   }
@@ -321,11 +336,12 @@ async function saveItem(item, mediaDir, knownFiles, signal) {
   return { status: "saved", savedAt: new Date().toISOString(), files, notes };
 }
 
-async function run() {
+async function run({ full = false } = {}) {
   running = true;
   stopper = new AbortController();
   const { signal } = stopper;
   startBtn.hidden = true;
+  fullCheckBtn.hidden = true;
   stopBtn.hidden = false;
   runStatus.className = "";
   runCounts.textContent = "";
@@ -366,7 +382,7 @@ async function run() {
       const cursor = missingFiles(record, fileExists);
       if (cursor === undefined) continue;
       if (cursor === null) {
-        reportProblem(`@${record.legacy?.likesDb?.author_handle ?? "?"} (${record.id}): files are missing from the folder, and TikTok no longer lists this item, so it cannot be downloaded again`);
+        reportProblem(`@${record.raw?.author?.uniqueId ?? "?"} (${record.id}): files are missing from the folder, and there is no page to download them again from`);
       } else {
         missing[record.id] = cursor;
       }
@@ -458,10 +474,29 @@ async function run() {
       return fresh;
     };
 
-    const completeFirstDownload = () =>
-      saveArchive({ firstDownload: { complete: true, nextCursor: null, completedAt: now } });
+    // Walks to the end of the feed: the first download and full checks. Each
+    // saves its position after every page, and when it started, since an
+    // item it did not see by the end is no longer in the likes.
+    let liked = 0;
+    const walkToEnd = async (walk, key, label) => {
+      if (walk.from === "0") {
+        await saveArchive({ topCheckedAt: now, [key]: { complete: false, nextCursor: "0", startedAt: now } });
+      }
+      runStatus.textContent = label;
+      for await (const page of walkFrom(walk.from)) {
+        await processPage(page);
+        liked += page.items.length;
+        await saveArchive({ [key]: { ...archive[key], nextCursor: page.olderCursor } });
+        runStatus.textContent = label;
+      }
+      // A walk continued from a saved position only counts its own pages.
+      const counted = walk.from === "0" ? { likesCount: liked } : {};
+      // A first download begun before start times were recorded began when
+      // the archive was created.
+      return { startedAt: archive[key]?.startedAt ?? archive.createdAt, ...counted };
+    };
 
-    for (const walk of planWalks(firstDownloadState(archive))) {
+    for (const walk of planWalks(archive, { full })) {
       if (walk.kind === "updates") {
         runStatus.textContent = "Checking for new likes…";
         let reachedEnd = true;
@@ -473,20 +508,22 @@ async function run() {
         }
         // The top of the feed is now fully checked.
         await saveArchive({ topCheckedAt: now });
-        // Walking all the way down covers whatever the first download missed.
+        // Walking all the way down covers whatever the first download or an
+        // unfinished full check missed, and counts as a full check.
         if (reachedEnd) {
-          if (!firstDownloadState(archive).complete) await completeFirstDownload();
+          await saveArchive({
+            firstDownload: { ...firstDownloadState(archive), complete: true, nextCursor: null, completedAt: archive.firstDownload?.completedAt ?? now },
+            fullCheck: null,
+            lastFullCheckAt: now
+          });
           break;
         }
+      } else if (walk.kind === "first") {
+        const { startedAt, ...counted } = await walkToEnd(walk, "firstDownload", "Downloading all your likes…");
+        await saveArchive({ firstDownload: { complete: true, nextCursor: null, startedAt, completedAt: now }, ...counted });
       } else {
-        if (walk.from === "0") await saveArchive({ topCheckedAt: now });
-        runStatus.textContent = "Downloading all your likes…";
-        for await (const page of walkFrom(walk.from)) {
-          await processPage(page);
-          await saveArchive({ firstDownload: { complete: false, nextCursor: page.olderCursor } });
-          runStatus.textContent = "Downloading all your likes…";
-        }
-        await completeFirstDownload();
+        const { startedAt, ...counted } = await walkToEnd(walk, "fullCheck", "Checking all your likes…");
+        await saveArchive({ fullCheck: null, lastFullCheckAt: startedAt, ...counted });
       }
     }
 
@@ -543,7 +580,8 @@ regainFolderBtn.addEventListener("click", async () => {
   if (pendingFolder && (await regainAccess(pendingFolder))) useFolder(pendingFolder);
 });
 
-startBtn.addEventListener("click", run);
+startBtn.addEventListener("click", () => run());
+fullCheckBtn.addEventListener("click", () => run({ full: true }));
 stopBtn.addEventListener("click", () => {
   runStatus.textContent = "Stopping…";
   stopper?.abort(new DOMException("Stopped by the user", "AbortError"));

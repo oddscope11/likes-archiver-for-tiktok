@@ -8,15 +8,37 @@ export function firstDownloadState(archive) {
 }
 
 // The walks a run makes, in order. "updates" starts at the newest like and
-// stops at the first page with nothing new; "first" continues the first
-// download from where it stopped.
-export function planWalks(state) {
-  if (state.complete) return [{ kind: "updates", from: "0" }];
-  if (state.nextCursor === null) return [{ kind: "first", from: "0" }];
-  return [
-    { kind: "updates", from: "0" },
-    { kind: "first", from: state.nextCursor }
-  ];
+// stops at the first page with nothing new. "first" (the first download) and
+// "full" (a full check the user asked for) walk to the end of the feed,
+// saving their position after every page; an interrupted one is continued by
+// the next run, after a look at the top for new likes.
+export function planWalks(archive, { full = false } = {}) {
+  const resume = (kind, cursor) =>
+    !cursor || cursor === "0" ? [{ kind, from: "0" }] : [{ kind: "updates", from: "0" }, { kind, from: cursor }];
+  const first = firstDownloadState(archive);
+  if (!first.complete) return resume("first", first.nextCursor);
+  if (archive?.fullCheck) return resume("full", archive.fullCheck.nextCursor);
+  if (full) return [{ kind: "full", from: "0" }];
+  return [{ kind: "updates", from: "0" }];
+}
+
+// When the last completed walk through the whole feed started: a full check,
+// or else the first download. Archives from before that was recorded fall
+// back to when the archive was created, which is when the first download
+// began.
+export function lastFullCheckAt(archive) {
+  if (archive?.lastFullCheckAt) return archive.lastFullCheckAt;
+  const first = firstDownloadState(archive);
+  return first.complete ? first.startedAt ?? archive.createdAt ?? null : null;
+}
+
+// Once a walk to the end of the feed has completed, an item it did not see is
+// no longer in the likes: deleted, made private or unliked. `lastFullCheckAt`
+// is when that walk started; an item seen again later is back.
+export function isGone(record, lastFullCheckAt) {
+  if (!lastFullCheckAt) return false;
+  const lastSeen = record.seenAt?.at(-1) ?? record.firstSeenAt;
+  return !(lastSeen >= lastFullCheckAt);
 }
 
 // An update walk stops at the first page holding nothing new. "New" means

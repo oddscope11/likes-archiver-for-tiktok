@@ -82,16 +82,14 @@ Decisions). TikTok's page adds its signature (`msToken`, `X-Bogus`,
 
 Open questions:
 
-- Routine runs stop at the first page with nothing new, so `seenAt` is not
-  refreshed for older likes. An occasional full check could restore that.
 - Whether the Origin/Referer rule for video downloads is needed.
 
 ## Archive folder format
 
 ```text
 <archive>/
-  archive.json      { format, createdAt, account, firstDownload,
-                      topCheckedAt, failures }
+  archive.json      { format, createdAt, account, firstDownload, fullCheck,
+                      lastFullCheckAt, topCheckedAt, likesCount, failures }
   gallery.html      A page to browse the archive; open it from the folder
   gallery-data.js   What the page shows, rebuilt from items/ after every run
   items/<id>.json   One record per liked item
@@ -102,9 +100,11 @@ Open questions:
 ```
 
 
-`firstDownload` is `{ complete, nextCursor, completedAt }`. Until the first
-download has walked the whole feed, `nextCursor` is the page it continues
-from. `failures` maps each item that could not be saved to the cursor of the
+`firstDownload` is `{ complete, nextCursor, startedAt, completedAt }`. Until
+the first download has walked the whole feed, `nextCursor` is the page it
+continues from. `fullCheck` is `{ nextCursor, startedAt }` while a full check
+is unfinished, and `likesCount` is how many likes the last walk from the top
+to the end saw. `failures` maps each item that could not be saved to the cursor of the
 page it was found on, so it can be retried with a single request.
 
 How a run decides what to fetch:
@@ -115,26 +115,35 @@ How a run decides what to fetch:
   nothing new, then continue the first download from `nextCursor`.
 - **First download complete:** walk from the newest like until a page holds
   nothing new.
+- **Full check** (its own button, once the first download is complete): walk
+  the whole feed again, saving the position like the first download. An
+  interrupted one is continued by the next Start, after a look for new likes.
+- **Then:** retry up to five pages holding earlier failures.
 
 "New" means not yet seen when the last complete check of the top of the feed
 began (`topCheckedAt`). Items first seen by an interrupted walk still count as
 new, so the next run walks past them rather than stopping on a page it only
 half finished.
-- **Then:** retry up to five pages holding earlier failures.
+
+Removals are not stored; they follow from `seenAt`. Once a walk through the
+whole feed completes (the first download or a full check), an item it did not
+see is no longer in the likes: deleted, made private or unliked.
+`lastFullCheckAt` is when that walk started, and an item seen after it is
+back. Archives from before `startedAt` was recorded count from `createdAt`.
 
 Before walking, a run reads every record and checks its files are on disk.
 Items with missing files, or that a stopped run never tried, join `failures`
-and are fetched again through their page. Items with no page (imported from the first version) are reported
-instead, since TikTok no longer lists them.
+and are fetched again through their page. Items with no known page are
+reported instead.
 
 After TikTok pushes back (an error, a refusal or a verification), the
 dashboard suggests waiting an hour, doubling with each further pushback that
 day, up to eight hours. It is advice only: Start is never disabled, because
 the user decides when to try again.
 
-Items moved over from the extension's unpublished first version, which the
-feed no longer listed, have `raw: null` and a `legacy` field holding what that
-version knew about them.
+Items moved over from the extension's unpublished first version keep what
+that version knew about them in a `legacy` field; their `raw` holds the few
+TikTok fields it had saved.
 
 Each item record holds:
 

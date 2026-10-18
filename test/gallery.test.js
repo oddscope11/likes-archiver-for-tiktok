@@ -11,15 +11,6 @@ const fromFeed = (id, olderCursor, extra = {}) => ({
   ...extra
 });
 
-const imported = {
-  id: "9",
-  kind: "video",
-  feedWindow: null,
-  raw: null,
-  media: { status: "saved", files: [{ role: "video", file: "Likes/old_9.mp4", bytes: 5, probed: {} }] },
-  legacy: { likesDb: { author_handle: "old", author_nickname: "Old", description: "gone", create_time: 1600000000, duration: 0, saved_at: 1750000000 } }
-};
-
 test("an entry carries what the page shows, and only file roles and paths", () => {
   assert.deepEqual(galleryEntry(fromFeed("1", "1760000000000")), {
     id: "1",
@@ -37,22 +28,18 @@ test("an entry carries what the page shows, and only file roles and paths", () =
   });
 });
 
-test("records imported from v1 use v1's metadata and are marked as no longer in likes", () => {
-  const entry = galleryEntry(imported);
-  assert.equal(entry.handle, "old");
-  assert.equal(entry.caption, "gone");
-  assert.equal(entry.likedAround, 1750000000000);
-  assert.equal(entry.inLikes, false);
+test("items a completed full check did not see are marked as no longer in likes", () => {
+  const seen = (at) => fromFeed("1", "1760000000000", { seenAt: [at] });
+  assert.equal(galleryEntry(seen("2026-10-01T00:00:00.000Z")).inLikes, true);
+  assert.equal(galleryEntry(seen("2026-10-01T00:00:00.000Z"), { lastFullCheckAt: "2026-10-02T00:00:00.000Z" }).inLikes, false);
+  assert.equal(galleryEntry(seen("2026-10-03T00:00:00.000Z"), { lastFullCheckAt: "2026-10-02T00:00:00.000Z" }).inLikes, true);
 });
 
-test("HEVC videos are marked, from the chosen stream or from ffprobe for imports", () => {
+test("HEVC videos are marked", () => {
   const hevc = fromFeed("4", "1");
   hevc.media.files[0].stream = { codecType: "h265_hvc1" };
   assert.equal(galleryEntry(hevc).hevc, true);
-  const old = structuredClone(imported);
-  old.media.files[0].probed = { codec: "hevc" };
-  assert.equal(galleryEntry(old).hevc, true);
-  assert.equal(galleryEntry(imported).hevc, false);
+  assert.equal(galleryEntry(fromFeed("5", "1")).hevc, false);
 });
 
 test("failed and not-yet-attempted items appear as not saved", () => {
@@ -63,7 +50,7 @@ test("failed and not-yet-attempted items appear as not saved", () => {
 });
 
 test("newest likes come first, using the page each item was found on", () => {
-  const data = galleryData([imported, fromFeed("1", "1740000000000"), fromFeed("2", "1760000000000")], { account: { uniqueId: "me" }, generatedAt: "now" });
+  const data = galleryData([fromFeed("9", "1750000000000"), fromFeed("1", "1740000000000"), fromFeed("2", "1760000000000")], { account: { uniqueId: "me" }, generatedAt: "now" });
   assert.deepEqual(data.items.map((i) => i.id), ["2", "9", "1"]);
   assert.equal(data.account, "me");
 });

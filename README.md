@@ -39,6 +39,12 @@ it can take a while if you have many. You can stop at any time and press
 Start again later; it continues where it stopped. Later runs only fetch new
 likes and usually finish in seconds.
 
+Once the first download is done, **Full check** goes through all your likes
+again. It fetches anything missing from the folder, and marks the items that
+are no longer in your likes (deleted, made private or unliked); the gallery
+can show just those. It takes as long as a first download, so run it now and
+then, not every time.
+
 Press **Open gallery** to browse what is saved, or open `gallery.html` in the
 folder.
 

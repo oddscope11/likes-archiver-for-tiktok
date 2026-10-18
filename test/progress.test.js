@@ -1,17 +1,36 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { firstDownloadState, planWalks, topCheckedAt, isNew, retryCursors, nextCooldown } from "../extension/lib/progress.js";
+import { firstDownloadState, planWalks, isGone, lastFullCheckAt, topCheckedAt, isNew, retryCursors, nextCooldown } from "../extension/lib/progress.js";
 
 test("a run starts, continues or only updates the first download", () => {
   // A new archive starts its first download from the top.
-  assert.deepEqual(planWalks(firstDownloadState({})), [{ kind: "first", from: "0" }]);
+  assert.deepEqual(planWalks({}), [{ kind: "first", from: "0" }]);
   // An interrupted one checks for new likes, then continues where it stopped.
-  assert.deepEqual(planWalks({ complete: false, nextCursor: "1744715233000" }), [
+  assert.deepEqual(planWalks({ firstDownload: { complete: false, nextCursor: "1744715233000" } }), [
     { kind: "updates", from: "0" },
     { kind: "first", from: "1744715233000" }
   ]);
   // A complete one only looks for new likes.
-  assert.deepEqual(planWalks({ complete: true, nextCursor: null }), [{ kind: "updates", from: "0" }]);
+  assert.deepEqual(planWalks({ firstDownload: { complete: true, nextCursor: null } }), [{ kind: "updates", from: "0" }]);
+});
+
+test("a full check walks the whole feed, and an interrupted one is continued", () => {
+  const done = { firstDownload: { complete: true, nextCursor: null } };
+  assert.deepEqual(planWalks(done, { full: true }), [{ kind: "full", from: "0" }]);
+  assert.deepEqual(planWalks({ ...done, fullCheck: { startedAt: "t", nextCursor: "500" } }), [
+    { kind: "updates", from: "0" },
+    { kind: "full", from: "500" }
+  ]);
+  // The first download comes first; it already walks the whole feed.
+  assert.deepEqual(planWalks({}, { full: true }), [{ kind: "first", from: "0" }]);
+});
+
+test("items a completed full check did not see are no longer in the likes", () => {
+  const check = "2026-10-20T10:00:00.000Z";
+  assert.ok(!isGone({ seenAt: ["2026-10-01T00:00:00.000Z"] }, null));
+  assert.ok(isGone({ seenAt: ["2026-10-01T00:00:00.000Z"] }, check));
+  assert.ok(!isGone({ seenAt: ["2026-10-01T00:00:00.000Z", "2026-10-20T10:05:00.000Z"] }, check));
+  assert.ok(!isGone({ seenAt: [check] }, check));
 });
 
 test("failed items are retried one page each, skipping pages already visited", () => {
@@ -49,4 +68,12 @@ test("the last complete check falls back to when the first download finished", (
   assert.equal(topCheckedAt({ topCheckedAt: "b", firstDownload: { completedAt: "a" } }), "b");
   assert.equal(topCheckedAt({ firstDownload: { completedAt: "a" } }), "a");
   assert.equal(topCheckedAt({}), null);
+});
+
+test("the last full walk is a full check, or else the first download", () => {
+  const archive = { createdAt: "a", firstDownload: { complete: true, startedAt: "b" } };
+  assert.equal(lastFullCheckAt(archive), "b");
+  assert.equal(lastFullCheckAt({ ...archive, lastFullCheckAt: "c" }), "c");
+  assert.equal(lastFullCheckAt({ createdAt: "a", firstDownload: { complete: true } }), "a");
+  assert.equal(lastFullCheckAt({ createdAt: "a", firstDownload: { complete: false, startedAt: "b" } }), null);
 });
