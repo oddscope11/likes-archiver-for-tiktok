@@ -432,8 +432,22 @@ async function run({ full = false } = {}) {
     // the page they were found on, like failed items.
     runStatus.textContent = "Checking the files in the folder…";
     const missing = { ...archive.failures };
-    // Saved videos, by id, for making any thumbnails that are missing.
+    // Every saved video gets a thumbnail file for the gallery, made from the
+    // video on disk right after it is saved. Saved videos are listed here so
+    // the end of the run can make any still missing: from archives saved
+    // before thumbnails existed, or a run that stopped.
     const videoFiles = new Map();
+    const thumbsDir = await folder.getDirectoryHandle(THUMB_DIR, { create: true });
+    const saveThumbnail = async (id, path) => {
+      try {
+        const file = await (await mediaDir.getFileHandle(path.slice(MEDIA_DIR.length + 1))).getFile();
+        const thumb = await makeThumbnail(file, signal);
+        if (thumb) await writeFile(thumbsDir, `${id}.jpg`, thumb);
+      } catch {
+        // A missing thumbnail is made by a later run; the gallery copes meanwhile.
+      }
+      signal.throwIfAborted();
+    };
     for await (const [name, handle] of itemsDir.entries()) {
       if (handle.kind !== "file" || !name.endsWith(".json")) continue;
       const record = JSON.parse(await (await handle.getFile()).text());
@@ -545,7 +559,10 @@ async function run({ full = false } = {}) {
         if (record.media.status === "saved") {
           counts.saved++;
           const video = record.media.files.find((file) => file.role === "video");
-          if (video) videoFiles.set(record.id, video.file);
+          if (video) {
+            videoFiles.set(record.id, video.file);
+            await saveThumbnail(record.id, video.file);
+          }
           addSaved(record, mediaDir).catch(() => {});
           refusalsInARow = 0;
           if (item.id in failures) {
@@ -629,19 +646,12 @@ async function run({ full = false } = {}) {
       await processPage({ items: page.items, newerCursor: cursor, olderCursor: page.cursor });
     }
 
-    // Every saved video gets a thumbnail file for the gallery, made from the
-    // video on disk. Whichever are missing are made here, so this also fills
-    // in archives saved before thumbnails existed, a little each run if the
-    // run is stopped.
-    const thumbsDir = await folder.getDirectoryHandle(THUMB_DIR, { create: true });
+    // Thumbnails still missing (see videoFiles).
     const haveThumbs = await thumbIds(folder);
     const toMake = [...videoFiles].filter(([id]) => !haveThumbs.has(id));
     for (const [index, [id, path]] of toMake.entries()) {
       runStatus.textContent = `Making thumbnails for the gallery… ${index + 1} of ${toMake.length}`;
-      const file = await (await mediaDir.getFileHandle(path.slice(MEDIA_DIR.length + 1))).getFile();
-      const thumb = await makeThumbnail(file, signal);
-      signal.throwIfAborted();
-      if (thumb) await writeFile(thumbsDir, `${id}.jpg`, thumb);
+      await saveThumbnail(id, path);
     }
 
     runStatus.textContent = Object.keys(archive.failures ?? {}).length

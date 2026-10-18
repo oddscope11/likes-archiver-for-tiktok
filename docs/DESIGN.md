@@ -136,10 +136,10 @@ see is no longer in the likes: deleted, made private or unliked.
 `lastFullCheckAt` is when that walk started, and an item seen after it is
 back. Archives from before `startedAt` was recorded count from `createdAt`.
 
-At the end of a run, every saved video without a thumbnail gets one, made
-from the file on disk. There is no migration step: an archive from before
-thumbnails existed simply has them all missing, and a stopped run leaves the
-rest for the next. A browser that cannot decode a video (HEVC without
+Each saved video gets a thumbnail right after it is saved, made from the
+file on disk. At the end of a run, any saved video still without one gets
+it. There is no migration step: an archive from before thumbnails existed
+simply has them all missing, and a stopped run leaves the rest for the next. A browser that cannot decode a video (HEVC without
 hardware support) makes none, and the gallery draws the frame itself.
 
 Before walking, a run reads every record and checks its files are on disk.
