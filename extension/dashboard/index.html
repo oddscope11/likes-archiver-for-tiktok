@@ -29,11 +29,13 @@
 
     <section>
       <h2>3 · Archive your likes</h2>
-      <p id="archive-status">Saves every video and photo post you have liked. You can stop at any time; the next start continues where it left off.</p>
+      <p id="archive-status">Saves every video and photo post you have liked.</p>
       <p id="cooldown-note" hidden></p>
-      <button id="start" disabled>Start</button>
-      <button id="full-check" hidden disabled>Full check</button>
-      <button id="stop" hidden>Stop</button>
+      <div class="actions">
+        <div id="start-row"><button id="start" disabled>Download all my likes</button><span id="start-note">You can stop at any time and continue later.</span></div>
+        <div id="full-check-row" hidden><button id="full-check" disabled>Full check</button><span id="full-check-note"></span></div>
+        <div id="stop-row" hidden><button id="stop">Stop</button><span>Everything saved so far is kept, and the next run continues from here.</span></div>
+      </div>
     </section>
 
     <section class="wide">

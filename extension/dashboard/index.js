@@ -23,6 +23,11 @@ const runStatus = el("run-status");
 const runCounts = el("run-counts");
 const failuresList = el("failures");
 const archiveStatus = el("archive-status");
+const startRow = el("start-row");
+const startNote = el("start-note");
+const fullCheckRow = el("full-check-row");
+const fullCheckNote = el("full-check-note");
+const stopRow = el("stop-row");
 const openGalleryBtn = el("open-gallery");
 const cooldownNote = el("cooldown-note");
 const failuresEmpty = el("failures-empty");
@@ -147,36 +152,72 @@ async function writeGallery(dir) {
   await writeText(dir, GALLERY_PAGE, page);
 }
 
+// "today", "yesterday" or a short date such as "18 Oct".
+function dayOf(iso) {
+  const date = new Date(iso);
+  const days = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(iso).setHours(0, 0, 0, 0)) / 86_400_000);
+  if (days === 0) return "today";
+  if (days === 1) return "yesterday";
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return date.toLocaleDateString([], { day: "numeric", month: "short", ...(sameYear ? {} : { year: "numeric" }) });
+}
+
+// What the archive panel says: where things stand, and what each button
+// does from here. `fullCheck` is null while the full check is not offered.
 function describeArchive(archive) {
   const state = firstDownloadState(archive);
-  if (state.complete && archive.fullCheck) {
-    return "A full check of your likes is not finished. Start checks for new likes, then continues it from where it stopped.";
+  if (!state.complete && state.nextCursor) {
+    return {
+      status: "The download of your likes is not finished yet.",
+      start: "Continue download",
+      startNote: "Picks up where it stopped, after saving anything you have liked since.",
+      fullCheck: null
+    };
   }
-  if (state.complete) {
-    const checked = new Date(lastFullCheckAt(archive) ?? Date.now()).toLocaleDateString();
-    return `All your likes are saved. Start fetches what you have liked since. Full check goes through all of them again${fullCheckLength(archive)} to find anything missing and anything no longer in your likes (last done ${checked}).`;
+  if (!state.complete) {
+    return {
+      status: "Nothing is saved yet.",
+      start: "Download all my likes",
+      startNote: "Saves every video and photo post you have liked. You can stop at any time and continue later.",
+      fullCheck: null
+    };
   }
-  if (state.nextCursor) {
-    return "The first download of your likes is not finished. Start checks for new likes, then continues from where it stopped.";
+  if (archive.fullCheck) {
+    return {
+      status: "All your likes are saved, but the last full check did not finish.",
+      start: "Continue full check",
+      startNote: "Saves anything you have liked since, then picks up the full check where it stopped.",
+      fullCheck: null
+    };
   }
-  return "Nothing has been downloaded yet. Start begins the first download of all your likes.";
+  const checked = lastFullCheckAt(archive);
+  return {
+    status: `All your likes are saved.${checked ? ` Last full check: ${dayOf(checked)}.` : ""}`,
+    start: "Get new likes",
+    startNote: "Saves what you have liked since last time. Usually takes seconds.",
+    fullCheck: `Goes through all your likes again${fullCheckLength(archive)} to save anything missing and find likes that were deleted or unliked.`
+  };
 }
 
 // Rough length of a full check, from how many likes the last full walk saw:
 // 16 per page, about 7 seconds apart.
 function fullCheckLength(archive) {
   if (!archive.likesCount) return "";
-  const pages = Math.ceil(archive.likesCount / 16);
-  return ` (about ${pages} pages, roughly ${Math.max(1, Math.round((pages * 7) / 60))} minutes)`;
+  const minutes = Math.max(1, Math.round((Math.ceil(archive.likesCount / 16) * 7) / 60));
+  return ` (about ${minutes} minute${minutes === 1 ? "" : "s"})`;
 }
 
 async function showArchiveState() {
   if (!folder) return;
   try {
     const archive = await readJson(folder, "archive.json");
-    archiveStatus.textContent = describeArchive(archive);
+    const described = describeArchive(archive);
+    archiveStatus.textContent = described.status;
+    startBtn.textContent = described.start;
+    startNote.textContent = described.startNote;
+    fullCheckNote.textContent = described.fullCheck ?? "";
+    fullCheckRow.hidden = running || !described.fullCheck;
     openGalleryBtn.hidden = !archive;
-    fullCheckBtn.hidden = !firstDownloadState(archive).complete || Boolean(archive.fullCheck);
   } catch (err) {
     archiveStatus.textContent = `The archive in this folder could not be read: ${err.message}`;
   }
@@ -345,9 +386,9 @@ async function run({ full = false } = {}) {
   running = true;
   stopper = new AbortController();
   const { signal } = stopper;
-  startBtn.hidden = true;
-  fullCheckBtn.hidden = true;
-  stopBtn.hidden = false;
+  startRow.hidden = true;
+  fullCheckRow.hidden = true;
+  stopRow.hidden = false;
   runStatus.className = "";
   runCounts.textContent = "";
   failuresList.replaceChildren();
@@ -573,11 +614,11 @@ async function run({ full = false } = {}) {
     }
 
     runStatus.textContent = Object.keys(archive.failures ?? {}).length
-      ? "Finished, but some items could not be saved. Start again later to retry them."
+      ? "Finished, but some items could not be saved. They are retried on the next run."
       : "Done. Everything you have liked is saved in the folder.";
   } catch (err) {
     if (err.name === "AbortError") {
-      runStatus.textContent = "Stopped. Everything saved so far is kept; start again any time.";
+      runStatus.textContent = "Stopped. Everything saved so far is kept, and the next run continues from here.";
     } else {
       runStatus.className = "error";
       const until = isPushback(err) ? ` It is a good idea to wait until ${timeOf(startCooldown().until)} before starting again.` : "";
@@ -594,8 +635,8 @@ async function run({ full = false } = {}) {
     renderCounts(counts);
     running = false;
     stopper = null;
-    startBtn.hidden = false;
-    stopBtn.hidden = true;
+    startRow.hidden = false;
+    stopRow.hidden = true;
     refreshStart();
     showArchiveState();
     scheduleAccountCheck();

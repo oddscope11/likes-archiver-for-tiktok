@@ -32,12 +32,13 @@ The extension is not in the Chrome Web Store. To install it:
 1. Open [tiktok.com](https://www.tiktok.com) in a tab and log in.
 2. Click the extension's icon to open its page.
 3. Choose a folder to save into. The extension remembers it.
-4. Press **Start**.
+4. Press **Download all my likes**.
 
 The first download walks through all your likes, a few seconds per page, so
-it can take a while if you have many. You can stop at any time and press
-Start again later; it continues where it stopped. Later runs only fetch new
-likes and usually finish in seconds.
+it can take a while if you have many. You can stop at any time; the button
+then says **Continue download** and picks up where it stopped. After that it
+says **Get new likes**, which only fetches what you have liked since and
+usually finishes in seconds.
 
 Once the first download is done, **Full check** goes through all your likes
 again. It fetches anything missing from the folder, and marks the items that

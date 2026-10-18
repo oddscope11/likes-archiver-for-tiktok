@@ -68,6 +68,19 @@ button {
 
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* Each button with a line saying what it does; the buttons share the width
+   of the widest. */
+.actions {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+  margin-top: 0.4rem;
+}
+.actions > div { display: contents; }
+.actions > div[hidden] { display: none; }
+.actions span { color: var(--muted); font-size: 0.9em; line-height: 1.35; }
+
 #run-status.error { color: #d33; }
 #run-counts, #cooldown-note, #saved-empty, #failures-empty, #latest-empty { color: var(--muted); }
 
