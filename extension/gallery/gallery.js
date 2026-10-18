@@ -23,6 +23,10 @@ function make(tag, props = {}, children = []) {
 }
 
 const formatDate = (ms) => (ms ? new Date(ms).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "unknown");
+// The like's exact time is not known, only a range; a range within one day
+// is shown as that day.
+const formatRange = (after, before) =>
+  !after || formatDate(after) === formatDate(before) ? formatDate(after || before) : `between ${formatDate(after)} and ${formatDate(before)}`;
 const formatDuration = (s) => (s ? `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}` : "");
 const filesOf = (item, role) => item.files.filter((f) => f.role === role);
 
@@ -203,7 +207,7 @@ function showCurrent() {
     make("p", {}, [make("strong", { text: item.name || item.handle }), make("br"), make("span", { text: `@${item.handle}` })]),
     make("p", { text: item.caption }),
     make("p", {}, [make("span", { class: "label", text: "Posted " }), make("span", { text: formatDate(item.postedAt) })]),
-    make("p", {}, [make("span", { class: "label", text: "Liked around " }), make("span", { text: formatDate(item.likedAround) })]),
+    make("p", {}, [make("span", { class: "label", text: "Liked " }), make("span", { text: formatRange(item.likedAfter, item.likedBefore) })]),
     ...(item.inLikes ? [] : [make("p", { class: "label", text: "No longer in your likes: deleted, made private or unliked." })]),
     make("p", {}, [link]),
     ...item.files.map((file) => make("p", {}, [make("a", { href: href(file.file), target: "_blank", text: file.file.split("/").pop() })]))

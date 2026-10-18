@@ -488,7 +488,7 @@ async function run({ full = false } = {}) {
     // new (see isNew).
     const processPage = async (page) => {
       let fresh = 0;
-      for (const item of page.items) {
+      for (const [position, item] of page.items.entries()) {
         signal.throwIfAborted();
         counts.seen++;
         if (!isValidId(item?.id)) {
@@ -500,7 +500,7 @@ async function run({ full = false } = {}) {
         const name = `${item.id}.json`;
         const existing = await readJson(itemsDir, name);
         if (isNew(existing, checkedAt)) fresh++;
-        const record = buildRecord(item, existing, { now, ...page });
+        const record = buildRecord(item, existing, { now, newerCursor: page.newerCursor, olderCursor: page.olderCursor, position });
 
         // Record the sighting before downloading, so it survives a crash.
         await writeJson(itemsDir, name, record);

@@ -19,7 +19,8 @@ test("an entry carries what the page shows, and only file roles and paths", () =
     name: "Maker",
     caption: "caption 1",
     postedAt: 1700000000000,
-    likedAround: 1760000000000,
+    likedAfter: 1760000000000,
+    likedBefore: 1760000000000,
     duration: 12,
     hevc: false,
     saved: true,
@@ -49,10 +50,27 @@ test("failed and not-yet-attempted items appear as not saved", () => {
   assert.deepEqual(pending.files, []);
 });
 
-test("newest likes come first, using the page each item was found on", () => {
-  const data = galleryData([fromFeed("9", "1750000000000"), fromFeed("1", "1740000000000"), fromFeed("2", "1760000000000")], { account: { uniqueId: "me" }, generatedAt: "now" });
-  assert.deepEqual(data.items.map((i) => i.id), ["2", "9", "1"]);
+test("items are in the feed's order: newest page first, then their place on it", () => {
+  const at = (id, olderCursor, position, createTime) => {
+    const record = fromFeed(id, olderCursor, { feedWindow: { newerCursor: "0", olderCursor, position } });
+    record.raw.createTime = createTime;
+    return record;
+  };
+  const records = [at("c", "1750000000000", 1, 1), at("a", "1760000000000", 0, 1), at("b", "1750000000000", 0, 1600000000), at("d", "1740000000000", undefined, 1)];
+  const data = galleryData(records, { account: { uniqueId: "me" }, generatedAt: "now" });
+  assert.deepEqual(data.items.map((i) => i.id), ["a", "b", "c", "d"]);
   assert.equal(data.account, "me");
+});
+
+test("the like date is the range the page's cursors allow, and never before posting", () => {
+  const record = fromFeed("1", "1750896093000", { feedWindow: { newerCursor: "1754952050000", olderCursor: "1750896093000", position: 4 } });
+  record.raw.createTime = 1752500000;
+  const entry = galleryEntry(record);
+  assert.equal(entry.likedAfter, 1752500000000);
+  assert.equal(entry.likedBefore, 1754952050000);
+  // The first page's upper end is when the item was last seen.
+  const top = galleryEntry(fromFeed("2", "1760000000000", { seenAt: ["2026-10-18T10:00:00.000Z"] }));
+  assert.equal(top.likedBefore, Date.parse("2026-10-18T10:00:00.000Z"));
 });
 
 test("the archive's copy of the page carries its script inline", () => {

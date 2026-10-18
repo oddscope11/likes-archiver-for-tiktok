@@ -15,7 +15,7 @@ export function classify(item) {
 
 // Builds the record for an item just seen in the feed, carrying over what an
 // earlier run already knew about it.
-export function buildRecord(item, existing, { now, newerCursor, olderCursor }) {
+export function buildRecord(item, existing, { now, newerCursor, olderCursor, position }) {
   return {
     // Fields this version does not manage, such as `legacy`, are kept.
     ...existing,
@@ -24,9 +24,10 @@ export function buildRecord(item, existing, { now, newerCursor, olderCursor }) {
     kind: classify(item),
     firstSeenAt: existing?.firstSeenAt ?? now,
     seenAt: [...(existing?.seenAt ?? []), now],
-    // The feed page the item was first found on. Cursors look like millisecond
-    // timestamps of the like, so this brackets when the item was liked.
-    feedWindow: existing?.feedWindow ?? { newerCursor, olderCursor },
+    // Where the item was last found in the feed: the page's cursors and its
+    // place on that page (0 is the most recent like). A page's older cursor
+    // is the time its last item was liked, so the cursors bracket the like.
+    feedWindow: { newerCursor, olderCursor, position },
     media: existing?.media ?? null,
     raw: item
   };

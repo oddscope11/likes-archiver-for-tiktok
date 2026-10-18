@@ -21,19 +21,19 @@ test("only numeric string ids are valid", () => {
 
 test("a first sighting records when and where the item was seen", () => {
   const item = { id: "1", video: { playAddr: "https://example.com/v" } };
-  assert.deepEqual(buildRecord(item, null, seen("2026-10-13T10:00:00.000Z")), {
+  assert.deepEqual(buildRecord(item, null, { ...seen("2026-10-13T10:00:00.000Z"), position: 3 }), {
     format: 1,
     id: "1",
     kind: "video",
     firstSeenAt: "2026-10-13T10:00:00.000Z",
     seenAt: ["2026-10-13T10:00:00.000Z"],
-    feedWindow: { newerCursor: "200", olderCursor: "100" },
+    feedWindow: { newerCursor: "200", olderCursor: "100", position: 3 },
     media: null,
     raw: item
   });
 });
 
-test("a later sighting keeps history and saved media, and refreshes the raw data", () => {
+test("a later sighting keeps history and saved media, and refreshes the raw data and place", () => {
   const first = buildRecord({ id: "1", desc: "old" }, null, seen("2026-10-13T10:00:00.000Z"));
   first.media = { file: "a.mp4" };
 
@@ -45,7 +45,7 @@ test("a later sighting keeps history and saved media, and refreshes the raw data
 
   assert.equal(second.firstSeenAt, "2026-10-13T10:00:00.000Z");
   assert.deepEqual(second.seenAt, ["2026-10-13T10:00:00.000Z", "2026-10-20T10:00:00.000Z"]);
-  assert.deepEqual(second.feedWindow, { newerCursor: "200", olderCursor: "100" });
+  assert.deepEqual(second.feedWindow, { newerCursor: "900", olderCursor: "800", position: undefined });
   assert.deepEqual(second.media, { file: "a.mp4" });
   assert.equal(second.raw.desc, "new");
 });
@@ -75,7 +75,7 @@ test("fields added by other tools survive a later sighting", () => {
   const imported = { format: 1, id: "1", kind: "video", feedWindow: null, seenAt: ["2025-06-22T00:00:00.000Z"], media: null, raw: null, legacy: { source: "v1" } };
   const record = buildRecord({ id: "1", video: { playAddr: "https://example.com/v" } }, imported, seen("2026-10-20T10:00:00.000Z"));
   assert.deepEqual(record.legacy, { source: "v1" });
-  assert.deepEqual(record.feedWindow, { newerCursor: "200", olderCursor: "100" });
+  assert.equal(record.feedWindow.olderCursor, "100");
   assert.equal(record.raw.id, "1");
 });
 

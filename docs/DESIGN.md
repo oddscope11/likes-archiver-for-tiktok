@@ -152,8 +152,11 @@ Each item record holds:
 
 - `id`, `kind` (`video`, `photo` or `unknown`)
 - `firstSeenAt`, and `seenAt`: every scan that found the item in the feed
-- `feedWindow`: the page cursors around the item when first seen. Cursors look
-  like millisecond timestamps of the like, so they bracket when it was liked.
+- `feedWindow`: where the item was last found in the feed: the page's cursors
+  and its `position` on the page (0 is the most recent like). A page's older
+  cursor is the millisecond time its last item was liked, so the cursors
+  bracket the like; the gallery shows that range and sorts by page, then
+  position, which is the feed's own order.
 - `media`: `null` until a download is attempted, then either
   `{ status: "saved", savedAt, files: [{ role, file, bytes, stream }], notes }`
   or `{ status: "failed", at, reason, part, detail }`. Failed items are retried on

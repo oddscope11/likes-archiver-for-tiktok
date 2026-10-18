@@ -9,15 +9,31 @@ export const GALLERY_DATA = "gallery-data.js";
 
 const number = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0);
 
-// Cursors are millisecond timestamps of likes, so the page an item was found
-// on says roughly when it was liked.
-function likedAround(record) {
-  return number(record.feedWindow?.olderCursor) || number(record.feedWindow?.newerCursor);
+// Cursors are millisecond timestamps of likes: a page's older cursor is when
+// its last item was liked, and its newer cursor when the item just above the
+// page was (or "0" on the first page, which was current when the item was
+// last seen). Likes come after posting, too.
+function likedBetween(record, postedAt) {
+  const window = record.feedWindow ?? {};
+  const after = Math.max(number(window.olderCursor), postedAt);
+  const lastSeen = Date.parse(record.seenAt?.at(-1) ?? "") || 0;
+  const before = number(window.newerCursor) || lastSeen;
+  return [after, Math.max(before, after)];
+}
+
+// The feed's own order: newest page first, then the place on the page.
+// Records from before places were kept fall back to the posting date.
+function feedOrder(a, b) {
+  const page = number(b.record.feedWindow?.olderCursor) - number(a.record.feedWindow?.olderCursor);
+  const place = (a.record.feedWindow?.position ?? Infinity) - (b.record.feedWindow?.position ?? Infinity);
+  return page || (Number.isNaN(place) ? 0 : place) || b.entry.postedAt - a.entry.postedAt || (a.entry.id < b.entry.id ? 1 : -1);
 }
 
 export function galleryEntry(record, { lastFullCheckAt = null } = {}) {
   const raw = record.raw;
   const media = record.media ?? {};
+  const postedAt = number(raw?.createTime) * 1000;
+  const [likedAfter, likedBefore] = likedBetween(record, postedAt);
   const files = (media.files ?? []).map((file) => ({ role: file.role, file: file.file }));
   const videoFile = (media.files ?? []).find((file) => file.role === "video");
   const codecName = videoFile?.stream?.codecType ?? "";
@@ -27,8 +43,9 @@ export function galleryEntry(record, { lastFullCheckAt = null } = {}) {
     handle: raw?.author?.uniqueId ?? "",
     name: raw?.author?.nickname ?? "",
     caption: raw?.desc ?? "",
-    postedAt: number(raw?.createTime) * 1000,
-    likedAround: likedAround(record),
+    postedAt,
+    likedAfter,
+    likedBefore,
     duration: number(raw?.video?.duration),
     // Some browsers cannot decode HEVC; the page says so instead of failing.
     hevc: /265|hevc|hvc/i.test(codecName),
@@ -38,12 +55,12 @@ export function galleryEntry(record, { lastFullCheckAt = null } = {}) {
   };
 }
 
-// Newest likes first. Items found on the same page share a like date, so
-// among them the most recently posted comes first.
+// Newest likes first, in the order the likes feed lists them.
 export function galleryData(records, { account, generatedAt, lastFullCheckAt = null }) {
   const items = records
-    .map((record) => galleryEntry(record, { lastFullCheckAt }))
-    .sort((a, b) => b.likedAround - a.likedAround || b.postedAt - a.postedAt || (a.id < b.id ? 1 : -1));
+    .map((record) => ({ record, entry: galleryEntry(record, { lastFullCheckAt }) }))
+    .sort(feedOrder)
+    .map(({ entry }) => entry);
   return { generatedAt, account: account?.uniqueId ?? null, items };
 }
 
