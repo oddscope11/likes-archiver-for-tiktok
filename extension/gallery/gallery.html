@@ -54,6 +54,9 @@ input, select, button {
 }
 
 input[type="search"] { flex: 1 1 16rem; min-width: 0; }
+/* The open menu is drawn by the browser; without its own colours the
+   options inherit light text onto a light menu in dark mode. */
+select, option { background-color: Canvas; color: CanvasText; }
 button { cursor: pointer; }
 button:disabled { opacity: 0.4; cursor: default; }
 
