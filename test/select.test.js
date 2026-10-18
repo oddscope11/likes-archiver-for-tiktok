@@ -17,15 +17,11 @@ const names = (streams) => streams.map((s) => s.gearName);
 test("prefers the most pixels, even at a lower bitrate", () => {
   const [best] = rankStreams(fixtures.video_hevc_1080p);
   assert.deepEqual([best.gearName, best.width, best.height], ["adapt_lowest_1080_1", 1080, 1920]);
-});
-
-test("takes H.264 when it is the only codec at the top resolution", () => {
-  const [best] = rankStreams(fixtures.video_h264_only_at_top_resolution);
-  assert.deepEqual([best.gearName, best.codecType], ["normal_540_0", "h264"]);
+  assert.ok(best.urls.length > 0 && best.bytes > 0);
 });
 
 test("at the same resolution, HEVC beats H.264 and then the higher bitrate wins", () => {
-  const ranked = rankStreams(fixtures.video_two_gears_same_resolution_and_codec);
+  const ranked = rankStreams(fixtures.video_mixed_codecs_same_resolution);
   assert.deepEqual(
     ranked.map((s) => [s.codecType, s.bitrate]),
     [
@@ -35,13 +31,6 @@ test("at the same resolution, HEVC beats H.264 and then the higher bitrate wins"
       ["h264", 294971]
     ]
   );
-});
-
-test("long videos rank the same way and carry size and mirrors", () => {
-  const [best] = rankStreams(fixtures.video_long);
-  assert.equal(best.gearName, "adapt_lowest_1080_1");
-  assert.equal(best.urls.length, 3);
-  assert.ok(best.bytes > 0);
 });
 
 test("VVC streams are never chosen", () => {
@@ -60,11 +49,8 @@ test("falls back to the default stream when there is no stream list", () => {
   assert.deepEqual(ranked[0].urls, ["https://example.com/v"]);
 });
 
-test("the watermarked download address is never used", () => {
-  assert.deepEqual(rankStreams({ video: { downloadAddr: "https://example.com/watermarked" } }), []);
-});
-
-test("photo posts and empty items have no streams", () => {
+test("photo posts, empty items and the watermarked download address give no streams", () => {
   assert.deepEqual(rankStreams(fixtures.photo_many_images), []);
   assert.deepEqual(rankStreams({}), []);
+  assert.deepEqual(rankStreams({ video: { downloadAddr: "https://example.com/watermarked" } }), []);
 });

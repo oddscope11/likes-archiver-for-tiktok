@@ -11,7 +11,7 @@ export class FeedError extends Error {
 }
 
 // Validates one response body and reduces it to what the walker needs.
-// Anything unexpected is an error rather than a guess (see README, principle 7).
+// Anything unexpected is an error rather than a guess (see docs/DESIGN.md, principle 7).
 export function parsePage(body) {
   if (body === null || typeof body !== "object" || Array.isArray(body)) {
     throw new FeedError("unexpected_shape", "response is not an object");

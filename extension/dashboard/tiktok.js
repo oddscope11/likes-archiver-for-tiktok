@@ -97,26 +97,11 @@ async function pageFetchLikes(secUid, cursor) {
   for (const [key, value] of Object.entries(values)) {
     if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
   }
-  // Note the parameter names of the request as it actually left the page,
-  // after TikTok's own code had its chance to sign it. Values are not kept.
-  const sentKeys = [];
-  const observer = new PerformanceObserver((list) => {
-    for (const entry of list.getEntries()) {
-      if (entry.name.includes("/api/favorite/item_list/") && entry.name.includes(`cursor=${cursor}`)) {
-        sentKeys.push(...new URL(entry.name).searchParams.keys());
-      }
-    }
-  });
-  observer.observe({ type: "resource" });
   try {
     const res = await fetch("/api/favorite/item_list/?" + params, { credentials: "include" });
-    const text = await res.text();
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    return { status: res.status, text, sentKeys };
+    return { status: res.status, text: await res.text() };
   } catch (err) {
     return { networkError: String(err) };
-  } finally {
-    observer.disconnect();
   }
 }
 
@@ -155,20 +140,9 @@ export async function connect() {
   throw new TikTokError("tab_not_ready");
 }
 
-// What the most recent feed request looked like when it left the page: how
-// many parameters it had and which of TikTok's signature fields were added.
-export let lastFeedRequest = null;
-
-const SIGNATURE_FIELDS = ["msToken", "X-Bogus", "X-Gnarly"];
-
 // Fetches one page of the likes feed and returns the parsed response body.
 export async function fetchLikesPage(tabId, secUid, cursor) {
   const result = await runInPage(tabId, pageFetchLikes, [secUid, cursor]);
-  if (result?.sentKeys) {
-    lastFeedRequest = result.sentKeys.length
-      ? { parameters: result.sentKeys.length, signature: SIGNATURE_FIELDS.filter((key) => result.sentKeys.includes(key)) }
-      : { parameters: null, signature: null, note: "request not observed" };
-  }
   if (!result) throw new TikTokError("tab_unreachable", "no result from the page");
   if (result.networkError) throw new TikTokError("network", result.networkError);
   if (result.status === 429) throw new TikTokError("rate_limited");

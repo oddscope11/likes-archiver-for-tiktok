@@ -54,7 +54,3 @@ export function nextCooldown(previous, now) {
   const strikes = previous?.day === day ? previous.strikes + 1 : 1;
   return { day, strikes, until: now + Math.min(HOUR * 2 ** (strikes - 1), 8 * HOUR) };
 }
-
-export function isCoolingDown(cooldown, now) {
-  return Boolean(cooldown) && now < cooldown.until;
-}

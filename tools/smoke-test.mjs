@@ -2,6 +2,8 @@
 // that the dashboard opens without errors. Makes no requests to TikTok.
 //
 //   node tools/smoke-test.mjs [path to chromium]
+//
+// With SCREENSHOT=path.png set, it also saves a picture of the dashboard.
 
 import { spawn } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";

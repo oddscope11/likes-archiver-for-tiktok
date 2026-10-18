@@ -1,9 +1,9 @@
 import { walkFeed, parsePage, FeedError } from "../lib/feed.js";
-import { firstDownloadState, planWalks, topCheckedAt, isNew, retryCursors, nextCooldown, isCoolingDown } from "../lib/progress.js";
+import { firstDownloadState, planWalks, topCheckedAt, isNew, retryCursors, nextCooldown } from "../lib/progress.js";
 import { buildRecord, isSaved, isValidId, missingFiles, RECORD_FORMAT } from "../lib/record.js";
 import { planItem, safeHandle, MEDIA_DIR } from "../lib/plan.js";
-import { withRetry } from "../lib/retry.js";
-import { connect, fetchLikesPage, openTikTok, TikTokError, lastFeedRequest } from "./tiktok.js";
+import { withRetry, retryDelay } from "../lib/retry.js";
+import { connect, fetchLikesPage, openTikTok, TikTokError } from "./tiktok.js";
 import { pickFolder, rememberedFolder, regainAccess, readJson, writeJson, writeText } from "./folder.js";
 import { galleryData, galleryScript, inlineGalleryPage, GALLERY_PAGE, GALLERY_DATA } from "../lib/gallery.js";
 import { allowVideoDownloads, downloadPart, DownloadError } from "./download.js";
@@ -117,7 +117,7 @@ let cooldownTimer = null;
 
 function refreshStart() {
   const cooldown = readCooldown();
-  const cooling = isCoolingDown(cooldown, Date.now());
+  const cooling = Boolean(cooldown) && Date.now() < cooldown.until;
   startBtn.disabled = running || !session || !folder;
   cooldownNote.hidden = !cooling || running;
   clearTimeout(cooldownTimer);
@@ -285,16 +285,6 @@ function wait(ms, signal) {
     };
     signal.addEventListener("abort", onAbort, { once: true });
   });
-}
-
-// Temporary feed problems are retried a few times before the run gives up.
-// An unexplained TikTok error code is retried once, as myfaveTT does.
-function retryDelay(err, attempt) {
-  if (err instanceof FeedError) return err.code === "tiktok_error" && attempt === 1 ? 30_000 : null;
-  if (!(err instanceof TikTokError)) return null;
-  if (err.code === "rate_limited") return 60_000;
-  if (err.code === "network" || (err.code === "http" && err.detail.startsWith("5"))) return 7_000 * attempt;
-  return null;
 }
 
 // Downloads everything for one item. Resolves to the record's `media` value,
@@ -521,15 +511,6 @@ async function run() {
     }
   } finally {
     if (folder) {
-      // Kept for diagnosis: whether TikTok's page signed our feed requests.
-      if (lastFeedRequest) {
-        try {
-          const archive = await readJson(folder, "archive.json");
-          if (archive) await writeJson(folder, "archive.json", { ...archive, lastFeedRequest: { ...lastFeedRequest, at: now } });
-        } catch {
-          // Diagnostics are optional.
-        }
-      }
       try {
         await writeGallery(folder);
       } catch (err) {

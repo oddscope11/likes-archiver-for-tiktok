@@ -1,9 +1,10 @@
-// Loads the gallery's data straight from the archive folder the extension
-// has access to. Media files become object URLs that point at the files on
-// disk without copying them.
+// Loads the gallery's data from the archive folder the extension has access
+// to: the same gallery-data.js a run writes for the folder's copy of the
+// page. Media files become object URLs that point at the files on disk
+// without copying them.
 
-import { rememberedFolder, regainAccess, readJson } from "../dashboard/folder.js";
-import { galleryData } from "../lib/gallery.js";
+import { rememberedFolder, regainAccess } from "../dashboard/folder.js";
+import { parseGalleryScript, GALLERY_DATA } from "../lib/gallery.js";
 import { MEDIA_DIR } from "../lib/plan.js";
 
 // Chromium asks for a click before it grants folder access again.
@@ -34,30 +35,26 @@ export async function load(urls, report) {
     if (!remembered.granted) await askForAccess(folder, report);
     report("Loading…");
 
-    const archive = await readJson(folder, "archive.json");
-    if (!archive) {
-      report("The archive folder is empty. Start a run on the extension's main page first.");
+    let data;
+    try {
+      data = parseGalleryScript(await (await (await folder.getFileHandle(GALLERY_DATA)).getFile()).text());
+    } catch {
+      report("The archive folder has no gallery yet. Start a run on the extension's main page first.");
       return null;
     }
 
-    const records = [];
-    const itemsDir = await folder.getDirectoryHandle("items");
-    for await (const [name, handle] of itemsDir.entries()) {
-      if (handle.kind === "file" && name.endsWith(".json")) records.push(handle);
-    }
     const mediaFiles = [];
     const mediaDir = await folder.getDirectoryHandle(MEDIA_DIR);
     for await (const [name, handle] of mediaDir.entries()) {
       if (handle.kind === "file") mediaFiles.push([name, handle]);
     }
 
-    const parsed = await Promise.all(records.map(async (handle) => JSON.parse(await (await handle.getFile()).text())));
     await Promise.all(
       mediaFiles.map(async ([name, handle]) => urls.set(`${MEDIA_DIR}/${name}`, URL.createObjectURL(await handle.getFile())))
     );
 
-    document.title = `Liked TikToks · @${archive.account?.uniqueId ?? ""}`;
-    return galleryData(parsed, { account: archive.account, generatedAt: new Date().toISOString() });
+    if (data.account) document.title = `Liked TikToks · @${data.account}`;
+    return data;
   } catch (err) {
     report(`The archive folder could not be read: ${err.message}`);
     return null;

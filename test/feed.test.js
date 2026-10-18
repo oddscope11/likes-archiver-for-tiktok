@@ -36,10 +36,17 @@ async function collect(options) {
 
 const rejectsWith = (code) => (err) => err instanceof FeedError && err.code === code;
 
-test("walks every page and follows the cursor", async () => {
+test("walks every page, follows the cursor and reports each page's cursors", async () => {
   const f = feed([page(["a", "b"], "200", true), page(["c"], "100", false)]);
-  assert.deepEqual(await collect(f.options), ["a", "b", "c"]);
+  const windows = [];
+  const ids = [];
+  for await (const p of walkFeed(f.options)) {
+    windows.push([p.newerCursor, p.olderCursor]);
+    ids.push(...p.items.map((i) => i.id));
+  }
+  assert.deepEqual(ids, ["a", "b", "c"]);
   assert.deepEqual(f.requested, ["0", "200"]);
+  assert.deepEqual(windows, [["0", "200"], ["200", "100"]]);
   assert.equal(f.pauses(), 1);
 });
 
@@ -51,21 +58,9 @@ test("can start from a saved cursor", async () => {
   assert.deepEqual(windows, [["200", "100"]]);
 });
 
-test("an empty page mid-feed does not end the walk", async () => {
-  const f = feed([page(["a"], "300", true), page([], "200", true), page(["b"], "100", false)]);
+test("empty pages mid-feed, with or without itemList, do not end the walk", async () => {
+  const f = feed([page(["a"], "300", true), page([], "250", true), { statusCode: 0, cursor: "200", hasMore: true }, page(["b"], "100", false)]);
   assert.deepEqual(await collect(f.options), ["a", "b"]);
-});
-
-test("a page without itemList counts as empty", async () => {
-  const f = feed([{ statusCode: 0, cursor: "200", hasMore: true }, page(["a"], "100", false)]);
-  assert.deepEqual(await collect(f.options), ["a"]);
-});
-
-test("reports which cursors bracket each page", async () => {
-  const f = feed([page(["a"], "200", true), page(["b"], "100", false)]);
-  const windows = [];
-  for await (const p of walkFeed(f.options)) windows.push([p.newerCursor, p.olderCursor]);
-  assert.deepEqual(windows, [["0", "200"], ["200", "100"]]);
 });
 
 test("a TikTok error status stops the walk", async () => {

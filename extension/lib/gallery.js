@@ -41,7 +41,8 @@ export function galleryEntry(record) {
   };
 }
 
-// Newest likes first. Items found on the same page keep a stable order.
+// Newest likes first. Items found on the same page share a like date, so
+// among them the most recently posted comes first.
 export function galleryData(records, { account, generatedAt }) {
   const items = records
     .map(galleryEntry)

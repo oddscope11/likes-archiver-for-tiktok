@@ -7,3 +7,6 @@ HUMANS.md
 
 # Raw API captures contain account data; commit only sanitized fixtures
 test/fixtures/raw/
+
+# Release builds (npm run package)
+tiktok-likes-archiver.zip

@@ -68,13 +68,6 @@ test("newest likes come first, using the page each item was found on", () => {
   assert.equal(data.account, "me");
 });
 
-test("the data file is a script that sets one global", () => {
-  const script = galleryScript({ items: [{ caption: "</script><b>" }] });
-  const window = {};
-  new Function("window", script)(window);
-  assert.equal(window.GALLERY.items[0].caption, "</script><b>");
-});
-
 test("the archive's copy of the page carries its script inline", () => {
   const page = inlineGalleryPage('<script src="gallery-data.js"></script>\n<script src="gallery.js"></script>', "const a = '$&';");
   assert.equal(page, "<script src=\"gallery-data.js\"></script>\n<script>\nconst a = '$&';</script>");
@@ -82,8 +75,12 @@ test("the archive's copy of the page carries its script inline", () => {
   assert.throws(() => inlineGalleryPage('<script src="gallery.js"></script>', "'</script>'"));
 });
 
-test("the data file can be read back without running it", () => {
-  const data = { items: [{ id: "1", caption: "a;b" }] };
-  assert.deepEqual(parseGalleryScript(galleryScript(data)), data);
+test("the data file is a script that sets one global, and reads back without running it", () => {
+  const data = { items: [{ id: "1", caption: "</script><b>;" }] };
+  const script = galleryScript(data);
+  const window = {};
+  new Function("window", script)(window);
+  assert.deepEqual(window.GALLERY, data);
+  assert.deepEqual(parseGalleryScript(script), data);
   assert.throws(() => parseGalleryScript("alert(1)"));
 });

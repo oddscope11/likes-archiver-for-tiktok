@@ -57,61 +57,41 @@ How TikTok Likes Archiver works and why. For installing and using it, see the
 
 ## Staying on TikTok's good side
 
-On 2026-10-13, the first day of development, TikTok showed the test account
-two captchas. Both appeared on the TikTok tab while it was being used by hand;
-no run of the extension was interrupted, so its verification handling has not
-yet been seen working live. As best remembered, the first came before the
-extension's first scan, which leaves only causes 1 and 2 below for that one,
-and the second came after scanning had started. The cause was not established.
-What happened that day, most likely first:
-
-1. A freshly installed browser with a new login.
-2. Ad-hoc exploration: about ten likes-feed requests in a few minutes through
-   the logged-in session, with varying parameters, plus partial-file requests.
-3. Feed requests that carry seven parameters where TikTok's own page sends
-   several dozen.
-4. Volume: a 27-page scan in two minutes, then several more runs.
-5. A dozen refused requests to TikTok's video servers from the same IP address
-   (`curl` and a logged-out headless browser).
-
-On 2026-10-14 three more captchas appeared, again only on the tab being used
-by hand; no run was interrupted by one. That day's runs were two long
-walks with the old code (the second read 568 items before TikTok answered
-with error 100001), then two short runs with the resumable walk. On 2026-10-15, with no extension runs
-since the day before, a few minutes of normal use brought three captchas, each
-while opening a user profile. So captchas appear without the extension; they
-are more likely tied to the new browser and login, or to the account.
+During development the test account saw several captchas, always on the
+TikTok tab while it was being used by hand; no run was ever interrupted by
+one. They kept appearing on a day with no runs at all, so they seem tied to a
+fresh browser and login rather than to the extension. Still, the first day
+included about ten hand-made feed requests and a dozen refused downloads from
+`curl`, which is what the first rule below is about.
 
 Rules that follow from it:
 
 - **Never probe TikTok outside the extension.** No `curl`, no headless browser,
-  no hand-written requests through a logged-in session. Download code is
-  tested against a local server; TikTok is only contacted by real runs.
+  no hand-written requests through a logged-in session. TikTok is only
+  contacted by real runs.
 - **Pages of the likes feed are 5 to 9 seconds apart**, and downloads 1 to 2.5
   seconds apart.
 - **A verification or refusal ends the run** with instructions for the user
   and a suggested time to wait. The extension never retries past one, but the
   user may start again whenever they choose.
 
-Still to do:
+The feed request carries the same parameters as the one TikTok's own Likes
+tab sends, including `count=16`, except `video_encoding=dash` (see
+Decisions). TikTok's page adds its signature (`msToken`, `X-Bogus`,
+`X-Gnarly`) to it, as it does to its own requests.
 
-- The feed request now carries the same parameters as the one TikTok's own
-  Likes tab sends (observed 2026-10-14), including `count=16`, except
-  `video_encoding=dash`, which is deliberately left out (decided 2026-10-17;
-  see Decisions). Confirmed 2026-10-15: TikTok's page
-  signs our requests (msToken, X-Bogus, X-Gnarly). Each run records this in
-  `archive.json` as `lastFeedRequest` (parameter names only, never values).
-- Routine runs now stop at the first page with nothing new, so `seenAt` is no
-  longer refreshed for older likes. An occasional full check could restore
-  that if tracking vanished items becomes a priority.
-- Find out whether the Origin/Referer rule for video downloads is needed.
+Open questions:
+
+- Routine runs stop at the first page with nothing new, so `seenAt` is not
+  refreshed for older likes. An occasional full check could restore that.
+- Whether the Origin/Referer rule for video downloads is needed.
 
 ## Archive folder format
 
 ```text
 <archive>/
-  archive.json      { format, createdAt, account, firstDownload, failures,
-                      lastFeedRequest }
+  archive.json      { format, createdAt, account, firstDownload,
+                      topCheckedAt, failures }
   gallery.html      A page to browse the archive; open it from the folder
   gallery-data.js   What the page shows, rebuilt from items/ after every run
   items/<id>.json   One record per liked item
@@ -135,11 +115,16 @@ How a run decides what to fetch:
   nothing new, then continue the first download from `nextCursor`.
 - **First download complete:** walk from the newest like until a page holds
   nothing new.
+
+"New" means not yet seen when the last complete check of the top of the feed
+began (`topCheckedAt`). Items first seen by an interrupted walk still count as
+new, so the next run walks past them rather than stopping on a page it only
+half finished.
 - **Then:** retry up to five pages holding earlier failures.
 
 Before walking, a run reads every record and checks its files are on disk.
-Items with missing files join `failures` and are fetched again through their
-page. Items with no page (imported from the first version) are reported
+Items with missing files, or that a stopped run never tried, join `failures`
+and are fetched again through their page. Items with no page (imported from the first version) are reported
 instead, since TikTok no longer lists them.
 
 After TikTok pushes back (an error, a refusal or a verification), the
@@ -147,8 +132,9 @@ dashboard suggests waiting an hour, doubling with each further pushback that
 day, up to eight hours. It is advice only: Start is never disabled, because
 the user decides when to try again.
 
-Items brought in by `tools/import-v1.mjs` that the feed no longer lists have
-`raw: null` and a `legacy` field holding what v1 knew about them.
+Items moved over from the extension's unpublished first version, which the
+feed no longer listed, have `raw: null` and a `legacy` field holding what that
+version knew about them.
 
 Each item record holds:
 
@@ -173,7 +159,8 @@ extension/            The unpacked extension (load this folder)
                       feeds it from the folder when the extension opens it
   dashboard/          The extension's page: UI and run logic (index.js),
                       TikTok tab access (tiktok.js), folder access (folder.js),
-                      streaming downloads (download.js)
+                      streaming downloads (download.js), the latest-likes
+                      strip (latest.js)
   lib/                Pure logic, covered by tests: feed walking, records,
                       stream selection, download plans, file sniffing,
                       run planning and suggested waits, retries
@@ -182,23 +169,16 @@ test/                 Node tests (`npm test`)
 tools/
   smoke-test.mjs      Loads the extension in headless Chromium, checks the
                       dashboard opens (no TikTok requests)
+package.json          npm test; npm run package zips the committed extension/
+                      folder for a release
   build-gallery.mjs   Rebuilds an archive's gallery page from its records
-  import-v1.mjs       One-off migration from the extension's unpublished
-                      first version
 ```
-
-## Develop
-
-- Load: `chrome://extensions` → Developer mode → Load unpacked → `extension/`
-- Test: `npm test` (Node's built-in runner, no dependencies)
-
-There is no build step: the extension is plain ES modules.
 
 ## Status
 
 Working end to end: the first download, resuming, update runs that stop at
 the first page with nothing new, failure retries, photo posts (with and
-without audio), the gallery, and moving an archive from the first version.
+without audio) and the gallery.
 
 Not yet seen working live: the verification/captcha handling, the suggested
 wait, switching to another TikTok tab when the one in use closes, and a
