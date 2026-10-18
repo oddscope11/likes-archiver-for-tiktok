@@ -24,6 +24,43 @@ async function fileUrl(mediaDir, path) {
   return URL.createObjectURL(await (await mediaDir.getFileHandle(name)).getFile());
 }
 
+// A video's frame at one second is drawn into a canvas and the player is
+// released, one video at a time. Chromium decodes HEVC in hardware, which
+// takes only a few videos at once; a strip of live players left some blank.
+let frames = Promise.resolve();
+
+function drawFrame(li, url) {
+  frames = frames.then(
+    () =>
+      new Promise((resolve) => {
+        const video = document.createElement("video");
+        video.muted = true;
+        video.preload = "auto";
+        const done = () => {
+          clearTimeout(timer);
+          video.removeAttribute("src");
+          video.load();
+          URL.revokeObjectURL(url);
+          resolve();
+        };
+        const timer = setTimeout(done, 15000);
+        video.addEventListener("loadeddata", () => {
+          // No size means this browser cannot decode the video; keep the plain tile.
+          if (video.videoWidth && li.isConnected) {
+            const canvas = document.createElement("canvas");
+            canvas.width = 216;
+            canvas.height = Math.round((video.videoHeight / video.videoWidth) * 216);
+            canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+            li.prepend(canvas);
+          }
+          done();
+        }, { once: true });
+        video.addEventListener("error", done, { once: true });
+        video.src = `${url}#t=1`;
+      })
+  );
+}
+
 async function tile(entry, mediaDir) {
   const li = document.createElement("li");
   li.title = `@${entry.handle}${entry.caption ? `: ${entry.caption}` : ""}`;
@@ -36,11 +73,7 @@ async function tile(entry, mediaDir) {
       img.src = await fileUrl(mediaDir, image.file);
       li.append(img);
     } else if (video) {
-      const player = document.createElement("video");
-      player.muted = true;
-      player.preload = "metadata";
-      player.src = (await fileUrl(mediaDir, video.file)) + "#t=1";
-      li.append(player);
+      drawFrame(li, await fileUrl(mediaDir, video.file));
     }
   } catch {
     // A missing file leaves the plain tile.
@@ -52,7 +85,7 @@ async function tile(entry, mediaDir) {
 }
 
 function release(li) {
-  for (const media of li.querySelectorAll("img, video")) URL.revokeObjectURL(media.src.split("#")[0]);
+  for (const img of li.querySelectorAll("img")) URL.revokeObjectURL(img.src);
   li.remove();
 }
 

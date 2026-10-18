@@ -92,7 +92,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   background: var(--tile);
 }
 
-#latest video, #latest img {
+#latest canvas, #latest img {
   position: absolute;
   inset: 0;
   width: 100%;
