@@ -36,3 +36,11 @@ export function buildRecord(item, existing, { now, newerCursor, olderCursor }) {
 export function isSaved(record, fileExists) {
   return record.media?.status === "saved" && record.media.files.every((entry) => fileExists(entry.file));
 }
+
+// For an item recorded as saved whose files are no longer all on disk: the
+// cursor of the feed page to fetch it again from, or null when it cannot be
+// fetched again (items imported from the first version have no page).
+export function missingFiles(record, fileExists) {
+  if (record.media?.status !== "saved" || isSaved(record, fileExists)) return undefined;
+  return record.feedWindow?.newerCursor ?? null;
+}

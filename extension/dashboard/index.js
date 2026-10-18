@@ -1,6 +1,6 @@
 import { walkFeed, parsePage, FeedError } from "../lib/feed.js";
 import { firstDownloadState, planWalks, retryCursors, nextCooldown, isCoolingDown } from "../lib/progress.js";
-import { buildRecord, isSaved, isValidId, RECORD_FORMAT } from "../lib/record.js";
+import { buildRecord, isSaved, isValidId, missingFiles, RECORD_FORMAT } from "../lib/record.js";
 import { planItem, safeHandle, MEDIA_DIR } from "../lib/plan.js";
 import { withRetry } from "../lib/retry.js";
 import { connect, fetchLikesPage, openTikTok, TikTokError, lastFeedRequest } from "./tiktok.js";
@@ -255,6 +255,13 @@ function renderCounts(counts) {
     ".";
 }
 
+function reportProblem(text) {
+  const line = document.createElement("li");
+  line.textContent = text;
+  failuresList.append(line);
+  failuresEmpty.hidden = true;
+}
+
 function reportFailure(item, media) {
   const line = document.createElement("li");
   const reason = ITEM_REASONS[media.reason] ?? "something went wrong";
@@ -359,6 +366,23 @@ async function run() {
     const knownIds = new Set();
     for await (const name of itemsDir.keys()) if (name.endsWith(".json")) knownIds.add(name.slice(0, -5));
     const seenThisRun = new Set();
+
+    // Saved items whose files have gone missing are fetched again through
+    // the page they were found on, like failed items.
+    runStatus.textContent = "Checking the files in the folder…";
+    const missing = { ...archive.failures };
+    for await (const [name, handle] of itemsDir.entries()) {
+      if (handle.kind !== "file" || !name.endsWith(".json")) continue;
+      const record = JSON.parse(await (await handle.getFile()).text());
+      const cursor = missingFiles(record, fileExists);
+      if (cursor === undefined) continue;
+      if (cursor === null) {
+        reportProblem(`@${record.legacy?.likesDb?.author_handle ?? "?"} (${record.id}): files are missing from the folder, and TikTok no longer lists this item, so it cannot be downloaded again`);
+      } else {
+        missing[record.id] = cursor;
+      }
+    }
+    if (Object.keys(missing).length !== Object.keys(archive.failures ?? {}).length) await saveArchive({ failures: missing });
 
     // If the TikTok tab is closed or reloaded mid-run, carry on through any
     // other open TikTok tab, as long as it is logged in to the same account.

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildRecord, classify, isSaved, isValidId } from "../extension/lib/record.js";
+import { buildRecord, classify, isSaved, missingFiles, isValidId } from "../extension/lib/record.js";
 
 const seen = (now) => ({ now, newerCursor: "200", olderCursor: "100" });
 
@@ -67,4 +67,12 @@ test("fields added by other tools survive a later sighting", () => {
   assert.deepEqual(record.legacy, { source: "v1" });
   assert.deepEqual(record.feedWindow, { newerCursor: "200", olderCursor: "100" });
   assert.equal(record.raw.id, "1");
+});
+
+test("saved items whose files went missing are fetched again through their page", () => {
+  const record = { media: { status: "saved", files: [{ file: "Likes/a.mp4" }] }, feedWindow: { newerCursor: "123", olderCursor: "100" } };
+  assert.equal(missingFiles(record, () => true), undefined);
+  assert.equal(missingFiles(record, () => false), "123");
+  assert.equal(missingFiles({ ...record, feedWindow: null }, () => false), null);
+  assert.equal(missingFiles({ media: { status: "failed" } }, () => false), undefined);
 });
