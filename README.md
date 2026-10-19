@@ -1,29 +1,20 @@
 # Likes Archiver for TikTok
 
 A Chromium extension that saves every TikTok video and photo post you have
-liked into a folder on your computer, and gives you a page to browse them.
+liked into a folder on your computer.
 
-- **Best quality TikTok offers:** the highest resolution, saved exactly as
-  TikTok serves it, never re-encoded.
-- **Photo posts too:** the original images in order, plus their sound.
-- **Picks up where it left off:** the first download can be stopped and
-  continued at any time. After that, each run only fetches what you have liked
-  since.
-- **Everything about each like is kept:** the caption, creator, dates and the
-  full details TikTok returned, as plain JSON next to the media files.
-- **A gallery that needs nothing installed:** `gallery.html` in the folder
-  opens in any browser and lets you search and watch your likes.
-- **Private:** it talks only to TikTok, through your own logged-in tab. No
-  accounts, no tracking, no servers of its own.
+- Saves videos in the best quality available, and photo posts with their sound.
+- You can stop and continue at any time; later runs only get new likes.
+- Includes a gallery page to browse your likes offline.
+
+It only reads your likes, only talks to TikTok, and sends nothing anywhere
+else.
 
 ## Install
 
-The extension is not in the Chrome Web Store. To install it:
-
 1. Download the latest `likes-archiver-for-tiktok.zip` from
    [Releases](../../releases) and unzip it.
-2. Open `chrome://extensions` in Chrome, Chromium or another Chromium-based
-   browser.
+2. Open `chrome://extensions`.
 3. Turn on **Developer mode** (top right).
 4. Click **Load unpacked** and choose the unzipped folder.
 
@@ -31,47 +22,22 @@ The extension is not in the Chrome Web Store. To install it:
 
 1. Open [tiktok.com](https://www.tiktok.com) in a tab and log in.
 2. Click the extension's icon to open its page.
-3. Choose a folder to save into. The extension remembers it.
+3. Choose a folder to save into.
 4. Press **Download all my likes**.
 
-The first download walks through all your likes, a few seconds per page, so
-it can take a while if you have many. You can stop at any time; the button
-then says **Continue download** and picks up where it stopped. After that it
-says **Get new likes**, which only fetches what you have liked since and
-usually finishes in seconds.
+- The first download can take a while. You can stop and continue later.
+- **Get new likes** fetches only what you liked since last time.
+- **Full check** goes through everything again to fill gaps and find removed
+  likes. Run it now and then.
+- **Open gallery**, or `gallery.html` in the folder, shows what is saved.
 
-Once the first download is done, **Full check** goes through all your likes
-again. It fetches anything missing from the folder, and marks the items that
-are no longer in your likes (deleted, made private or unliked); the gallery
-can show just those. It takes as long as a first download, so run it now and
-then, not every time.
-
-Press **Open gallery** to browse what is saved, or open `gallery.html` in the
-folder.
-
-If TikTok ever pushes back, for example by refusing requests, the run stops
-at once and says what happened. Everything saved so far is kept; wait a
-while before running again.
-
-## What ends up in the folder
+## The folder
 
 ```text
-gallery.html        Open this to browse your likes
-gallery-data.js     What the gallery shows
-archive.json        Which account this is, and how far the download got
-items/<id>.json     Everything TikTok said about each liked item
-Likes/              The videos, photos and sounds
-thumbnails/         Small pictures of the videos for the gallery
+gallery.html    Open this to browse your likes
+Likes/          The videos, photos and sounds
+items/          Everything TikTok said about each liked item
 ```
-
-The folder is the archive: it stays useful without the extension.
-
-## Privacy
-
-The extension only makes requests to TikTok, using the TikTok tab you have
-open, and only reads your likes. It never posts, likes, follows or changes
-anything on your account. Nothing is sent anywhere else. Its permissions are
-limited to `tiktok.com` and TikTok's video servers.
 
 ## Develop
 
