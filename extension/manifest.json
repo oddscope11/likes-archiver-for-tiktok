@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "TikTok Likes Archiver",
-  "version": "0.1.0",
+  "name": "Likes Archiver for TikTok",
+  "version": "0.1.1",
   "description": "Archives your liked TikTok videos to a local folder.",
   "action": {
-    "default_title": "TikTok Likes Archiver"
+    "default_title": "Likes Archiver for TikTok"
   },
   "background": {
     "service_worker": "background.js",

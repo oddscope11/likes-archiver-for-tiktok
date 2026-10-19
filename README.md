@@ -1,4 +1,4 @@
-# TikTok Likes Archiver
+# Likes Archiver for TikTok
 
 A Chromium extension that saves every TikTok video and photo post you have
 liked into a folder on your computer, and gives you a page to browse them.
@@ -20,7 +20,7 @@ liked into a folder on your computer, and gives you a page to browse them.
 
 The extension is not in the Chrome Web Store. To install it:
 
-1. Download the latest `tiktok-likes-archiver.zip` from
+1. Download the latest `likes-archiver-for-tiktok.zip` from
    [Releases](../../releases) and unzip it.
 2. Open `chrome://extensions` in Chrome, Chromium or another Chromium-based
    browser.

@@ -1,10 +1,10 @@
 {
-  "name": "tiktok-likes-archiver",
-  "version": "0.1.0",
+  "name": "likes-archiver-for-tiktok",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node --test test/",
-    "package": "git archive --format=zip --prefix=tiktok-likes-archiver/ -o tiktok-likes-archiver.zip HEAD:extension"
+    "package": "git archive --format=zip --prefix=likes-archiver-for-tiktok/ -o likes-archiver-for-tiktok.zip HEAD:extension"
   }
 }

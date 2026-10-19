@@ -1,6 +1,6 @@
 # Design notes
 
-How TikTok Likes Archiver works and why. For installing and using it, see the
+How Likes Archiver for TikTok works and why. For installing and using it, see the
 [README](../README.md).
 
 ## Principles
