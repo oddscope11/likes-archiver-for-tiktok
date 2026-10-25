@@ -192,20 +192,18 @@ function describeArchive(archive) {
       fullCheck: null
     };
   }
-  if (archive.fullCheck) {
-    return {
-      status: "All your likes are saved, but the last full check did not finish.",
-      start: "Continue full check",
-      startNote: "Saves anything you have liked since, then picks up the full check where it stopped.",
-      fullCheck: null
-    };
-  }
   const checked = lastFullCheckAt(archive);
+  const paused = Boolean(archive.fullCheck);
   return {
-    status: `All your likes are saved.${checked ? ` Last full check: ${dayOf(checked)}.` : ""}`,
+    status: paused
+      ? "All your likes are saved. A full check is paused partway."
+      : `All your likes are saved.${checked ? ` Last full check: ${dayOf(checked)}.` : ""}`,
     start: "Get new likes",
     startNote: "Saves what you have liked since last time. Usually takes seconds.",
-    fullCheck: `Goes through all your likes again${fullCheckLength(archive)} to save anything missing and find likes that were deleted or unliked.`
+    fullCheckLabel: paused ? "Continue full check" : "Full check",
+    fullCheck: paused
+      ? "Picks up the paused full check where it stopped, after saving anything you have liked since."
+      : `Goes through all your likes again${fullCheckLength(archive)} to save anything missing and find likes that were deleted or unliked.`
   };
 }
 
@@ -226,6 +224,7 @@ async function showArchiveState() {
     startBtn.textContent = described.start;
     startNote.textContent = described.startNote;
     fullCheckNote.textContent = described.fullCheck ?? "";
+    fullCheckBtn.textContent = described.fullCheckLabel ?? "Full check";
     fullCheckRow.hidden = running || !described.fullCheck;
     openGalleryBtn.hidden = !archive;
   } catch (err) {

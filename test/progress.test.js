@@ -14,10 +14,12 @@ test("a run starts, continues or only updates the first download", () => {
   assert.deepEqual(planWalks({ firstDownload: { complete: true, nextCursor: null } }), [{ kind: "updates", from: "0" }]);
 });
 
-test("a full check walks the whole feed, and an interrupted one is continued", () => {
+test("a full check walks the whole feed, and an interrupted one waits until asked for", () => {
   const done = { firstDownload: { complete: true, nextCursor: null } };
   assert.deepEqual(planWalks(done, { full: true }), [{ kind: "full", from: "0" }]);
-  assert.deepEqual(planWalks({ ...done, fullCheck: { startedAt: "t", nextCursor: "500" } }), [
+  const paused = { ...done, fullCheck: { startedAt: "t", nextCursor: "500" } };
+  assert.deepEqual(planWalks(paused), [{ kind: "updates", from: "0" }]);
+  assert.deepEqual(planWalks(paused, { full: true }), [
     { kind: "updates", from: "0" },
     { kind: "full", from: "500" }
   ]);

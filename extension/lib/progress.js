@@ -10,16 +10,17 @@ export function firstDownloadState(archive) {
 // The walks a run makes, in order. "updates" starts at the newest like and
 // stops at the first page with nothing new. "first" (the first download) and
 // "full" (a full check the user asked for) walk to the end of the feed,
-// saving their position after every page; an interrupted one is continued by
-// the next run, after a look at the top for new likes.
+// saving their position after every page. An interrupted first download is
+// continued by the next run, after a look at the top for new likes. An
+// interrupted full check waits, paused, until the user asks for a full check
+// again; other runs only look for new likes.
 export function planWalks(archive, { full = false } = {}) {
   const resume = (kind, cursor) =>
     !cursor || cursor === "0" ? [{ kind, from: "0" }] : [{ kind: "updates", from: "0" }, { kind, from: cursor }];
   const first = firstDownloadState(archive);
   if (!first.complete) return resume("first", first.nextCursor);
-  if (archive?.fullCheck) return resume("full", archive.fullCheck.nextCursor);
-  if (full) return [{ kind: "full", from: "0" }];
-  return [{ kind: "updates", from: "0" }];
+  if (!full) return [{ kind: "updates", from: "0" }];
+  return resume("full", archive?.fullCheck?.nextCursor);
 }
 
 // When the last completed walk through the whole feed started: a full check,

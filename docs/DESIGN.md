@@ -122,7 +122,8 @@ How a run decides what to fetch:
   nothing new.
 - **Full check** (its own button, once the first download is complete): walk
   the whole feed again, saving the position like the first download. An
-  interrupted one is continued by the next Start, after a look for new likes.
+  interrupted one stays paused, and ordinary runs only look for new likes; the
+  button then offers to continue it.
 - **Then:** retry up to five pages holding earlier failures.
 
 "New" means not yet seen when the last complete check of the top of the feed
